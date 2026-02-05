@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { getUsers, deleteUser } from "@/api/index"; // Import API functions
+import { useState, useEffect} from "react";
+import { getUsers, type User as ApiUser } from "@/api";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,62 +9,111 @@ import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+
 interface User {
-  id: number;
-  username: string; 
+  id: string;
+  userName: string;
   email: string;
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  roles: { id: number; roleName: string; description?: string }[]; // Backend returns array of roles
+  role: string;
 }
 
 export default function ManageUsers() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterBy, setFilterBy] = useState("all"); // Changed default to 'all'
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [filterBy, setFilterBy] = useState("phoneNo");
 
-  // Function to fetch data from backend
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    try {
-      // Map frontend filter value to backend expected value
-      const backendFilterType = filterBy === "phoneNo" ? "phone" : "all";
-      
-      const data = await getUsers(backendFilterType, searchTerm);
-      setUsers(data);
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-    } finally {
-      setIsLoading(false);
+  // Mock data
+  const [users] = useState<User[]>([
+    {
+      id: "1",
+      userName: "Dj",
+      email: "judeferdinands585@gmail.com",
+      firstName: "cj",
+      lastName: "-",
+      phoneNumber: "0726208396",
+      role: "",
+    },
+    {
+      id: "2",
+      userName: "0778508595",
+      email: "0778508595@gmail.com",
+      firstName: "Mohamed",
+      lastName: "rifkhan",
+      phoneNumber: "0778508595",
+      role: "Driver",
+    },
+    {
+      id: "3",
+      userName: "0715892313",
+      email: "0715892313@gmail.com",
+      firstName: "Ranadinghe",
+      lastName: "Arachchige Suresh Nilanka Chandana",
+      phoneNumber: "0715892313",
+      role: "Driver",
+    },
+    {
+      id: "4",
+      userName: "admin",
+      email: "admin@casons.com",
+      firstName: "System",
+      lastName: "Administrator",
+      phoneNumber: "0112345678",
+      role: "Administrator",
+    },
+    {
+      id: "5",
+      userName: "john_driver",
+      email: "john.driver@gmail.com",
+      firstName: "John",
+      lastName: "Silva",
+      phoneNumber: "0771234567",
+      role: "Driver",
+    },
+    {
+      id: "6",
+      userName: "mary_cc",
+      email: "mary.center@casons.com",
+      firstName: "Mary",
+      lastName: "Perera",
+      phoneNumber: "0772345678",
+      role: "CallCenterAgent",
+    },
+    {
+      id: "7",
+      userName: "corp_user1",
+      email: "corporate@company.com",
+      firstName: "David",
+      lastName: "Fernando",
+      phoneNumber: "0773456789",
+      role: "Corporate",
+    },
+    {
+      id: "8",
+      userName: "accountant1",
+      email: "accounts@casons.com",
+      firstName: "Sarah",
+      lastName: "Jayawardena",
+      phoneNumber: "0774567890",
+      role: "Accountant",
+    },
+  ]);
+
+  const filteredUsers = users.filter((user) => {
+    const search = searchTerm.toLowerCase();
+    if (filterBy === "phoneNo") {
+      return user.phoneNumber.includes(searchTerm);
     }
-  };
-
-  // Fetch on mount and when filters change
-  useEffect(() => {
-    // Add a small debounce to prevent too many API calls while typing
-    const delayDebounceFn = setTimeout(() => {
-      fetchUsers();
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, filterBy]);
-
-  // Handle Delete
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await deleteUser(id);
-        // Refresh list after delete
-        fetchUsers();
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        alert("Failed to delete user");
-      }
-    }
-  };
+    return (
+      user.userName.toLowerCase().includes(search) ||
+      user.email.toLowerCase().includes(search) ||
+      user.firstName.toLowerCase().includes(search) ||
+      user.lastName.toLowerCase().includes(search) ||
+      user.phoneNumber.includes(search)
+    );
+  });
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
@@ -125,34 +174,23 @@ export default function ManageUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24">
-                      Loading data...
-                    </TableCell>
-                  </TableRow>
-                ) : users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No users found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
+                  filteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      {/* Updated property names to match backend response */}
-                      <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell className="font-medium">{user.userName}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.firstName}</TableCell>
                       <TableCell>{user.lastName}</TableCell>
                       <TableCell>{user.phoneNumber}</TableCell>
                       <TableCell>
-                        {user.roles && user.roles.length > 0 ? (
-                          user.roles.map((role, index) => (
-                            <Badge key={index} variant="outline" className="mr-1">
-                              {role.roleName}
-                            </Badge>
-                          ))
+                        {user.role ? (
+                          <Badge variant="outline">{user.role}</Badge>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
@@ -176,7 +214,7 @@ export default function ManageUsers() {
                           <Button
                             size="sm"
                             className="bg-red-500 hover:bg-red-600 text-white"
-                            onClick={() => handleDelete(user.id)}
+                            onClick={() => navigate(`/admin/users/delete/${user.id}`)}
                           >
                             Delete
                           </Button>
