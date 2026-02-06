@@ -401,7 +401,7 @@ const items: MenuItem[] = [
         url: "/admin/reports/enroute",
         icon: FileText,
       },
-      { title: "Waiting Bookings Report", 
+      { title: "Driver Waiting Booking Report", 
         url: "/admin/reports/waiting",
         icon: FileText 
       },
@@ -411,6 +411,10 @@ const items: MenuItem[] = [
       },
       { title: "Completed Bookings Report", 
         url: "/admin/reports/completed-bookings",
+        icon: FileText 
+      },
+      { title: "Modification Details Report", 
+        url: "/admin/reports/modification",
         icon: FileText 
       },
       { title: "Cancelled Bookings Report", 
@@ -469,6 +473,7 @@ const items: MenuItem[] = [
         url: "/admin/reports/promo-code-details",
         icon: FileText 
       },
+      
     ],
   },
 ];

@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
@@ -13,6 +14,10 @@ import {
   MapPin,
   Smartphone,
   Shield,
+  Printer,
+  Filter,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,8 +37,27 @@ export type Driver = {
   blocked: "Yes" | "No";
   lastLocation: string;
   appVersion: string;
-  // Computed for search
   fullName: string;
+};
+
+// --- Helper for Logo ---
+const getBase64ImageFromURL = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute("crossOrigin", "anonymous");
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = (error) => reject(error);
+    img.src = url;
+  });
 };
 
 // --- Mock Data ---
@@ -188,7 +212,7 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "code",
-    header: "Code",
+    header: () => <span className="font-bold text-black">Code</span>,
     cell: ({ row }) => (
       <span className="font-mono font-semibold text-purple-700">
         {row.getValue("code")}
@@ -197,15 +221,15 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "firstName",
-    header: "First Name",
+    header: () => <span className="font-bold text-black">First Name</span>,
   },
   {
     accessorKey: "lastName",
-    header: "Last Name",
+    header: () => <span className="font-bold text-black">Last Name</span>,
   },
   {
     accessorKey: "fullName",
-    header: "Full Name",
+    header: () => <span className="font-bold text-black">Full Name</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
@@ -219,14 +243,14 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "nic",
-    header: "NIC",
+    header: () => <span className="font-bold text-black">NIC</span>,
     cell: ({ row }) => (
       <span className="font-mono text-sm">{row.getValue("nic")}</span>
     ),
   },
   {
     accessorKey: "contactNumber",
-    header: "Contact Number",
+    header: () => <span className="font-bold text-black">Contact Number</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Phone className="h-3 w-3 text-green-600" />
@@ -236,7 +260,7 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "emergencyContactNumber",
-    header: "Emergency Contact",
+    header: () => <span className="font-bold text-black">Emergency Contact</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Phone className="h-3 w-3 text-red-500" />
@@ -246,7 +270,7 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "manualDispatch",
-    header: "Manual Dispatch",
+    header: () => <span className="font-bold text-black">Manual Dispatch</span>,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
@@ -258,7 +282,7 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "blocked",
-    header: "Blocked",
+    header: () => <span className="font-bold text-black">Status</span>,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
@@ -278,7 +302,7 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "lastLocation",
-    header: "Last Location",
+    header: () => <span className="font-bold text-black">Last Location</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-blue-500" />
@@ -288,7 +312,7 @@ const columns: ColumnDef<Driver>[] = [
   },
   {
     accessorKey: "appVersion",
-    header: "App Ver",
+    header: () => <span className="font-bold text-black">App Ver</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Smartphone className="h-3 w-3 text-muted-foreground" />
@@ -302,20 +326,32 @@ const columns: ColumnDef<Driver>[] = [
 
 // --- Filter Types ---
 type StatusFilter = "all" | "active" | "blocked";
+type DispatchFilter = "all" | "manual" | "auto";
 
 export default function DriverReport() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [dispatchFilter, setDispatchFilter] = useState<DispatchFilter>("all");
 
-  // Filter data based on selected status
+  // Filter data based on selected filters
   const filteredData = useMemo(() => {
     let result = [...allDriverData];
+    
+    // Status filter
     if (statusFilter === "active") {
       result = result.filter((d) => d.blocked === "No");
     } else if (statusFilter === "blocked") {
       result = result.filter((d) => d.blocked === "Yes");
     }
+    
+    // Dispatch filter
+    if (dispatchFilter === "manual") {
+      result = result.filter((d) => d.manualDispatch === "Yes");
+    } else if (dispatchFilter === "auto") {
+      result = result.filter((d) => d.manualDispatch === "No");
+    }
+    
     return result;
-  }, [statusFilter]);
+  }, [statusFilter, dispatchFilter]);
 
   // Calculate statistics
   const stats = useMemo(
@@ -323,42 +359,65 @@ export default function DriverReport() {
       total: allDriverData.length,
       active: allDriverData.filter((d) => d.blocked === "No").length,
       blocked: allDriverData.filter((d) => d.blocked === "Yes").length,
-      manualDispatch: filteredData.filter((d) => d.manualDispatch === "Yes").length,
+      manualDispatch: allDriverData.filter((d) => d.manualDispatch === "Yes").length,
     }),
-    [filteredData]
-  );
-
-  // Table filters (dropdown in table header)
-  const tableFilters = useMemo(
-    () => [
-      {
-        key: "blocked",
-        label: "Status",
-        options: [
-          { value: "No", label: "Active" },
-          { value: "Yes", label: "Blocked" },
-        ],
-      },
-    ],
     []
   );
 
-  // --- Export Functions ---
-  const exportPDF = () => {
+  // --- PDF & Print Logic ---
+  const generateReport = async (action: "save" | "print") => {
     const doc = new jsPDF({ orientation: "landscape" });
-    
-    // Header
-    doc.setFontSize(18);
-    doc.setTextColor(99, 48, 184); // Purple
-    doc.text("Driver Report", 14, 15);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated: ${new Date().toLocaleDateString()} | Total: ${filteredData.length} drivers`, 14, 22);
 
-    // Table
+    // 1. Add Logo
+    try {
+      const logoData = await getBase64ImageFromURL("/logo.png");
+      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
+    } catch (e) {
+      console.error("Logo missing", e);
+    }
+
+    // 2. Main Title
+    doc.setFontSize(22);
+    doc.setTextColor(99, 48, 184); // Purple
+    doc.text("Driver Registry Audit Report", 40, 22);
+
+    // 3. Metadata
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 28);
+
+    // 4. --- APPLIED FILTERS SECTION ---
+    doc.setDrawColor(200);
+    doc.line(14, 35, 283, 35); // Horizontal line
+
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applied Report Filters:", 14, 42);
+
+    doc.setFont("helvetica", "normal");
+    const statusText =
+      statusFilter === "all"
+        ? "All Drivers"
+        : statusFilter === "active"
+        ? "Active Only"
+        : "Blocked Only";
+    const dispatchText =
+      dispatchFilter === "all"
+        ? "All Dispatch Types"
+        : dispatchFilter === "manual"
+        ? "Manual Dispatch Only"
+        : "Auto Dispatch Only";
+
+    doc.text(`Status Filter: ${statusText}`, 14, 48);
+    doc.text(`Dispatch Filter: ${dispatchText}`, 14, 53);
+    doc.text(`Total Records in Database: ${allDriverData.length}`, 14, 58);
+    doc.text(`Filtered Records: ${filteredData.length}`, 14, 63);
+    doc.text(`Active: ${stats.active} | Blocked: ${stats.blocked} | Manual Dispatch: ${stats.manualDispatch}`, 14, 68);
+
+    // 5. Table
     autoTable(doc, {
-      head: [["Code", "First Name", "Last Name", "NIC", "Contact", "Emergency", "Manual", "Blocked", "Location", "App Ver"]],
+      head: [["Code", "First Name", "Last Name", "NIC", "Contact", "Emergency", "Manual", "Status", "Location", "App Ver"]],
       body: filteredData.map((d) => [
         d.code,
         d.firstName,
@@ -367,41 +426,54 @@ export default function DriverReport() {
         d.contactNumber,
         d.emergencyContactNumber,
         d.manualDispatch,
-        d.blocked,
+        d.blocked === "Yes" ? "Blocked" : "Active",
         d.lastLocation,
         d.appVersion,
       ]),
-      startY: 28,
+      startY: 75,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [99, 48, 184] }, // Purple header
+      headStyles: { fillColor: [99, 48, 184], textColor: [255, 255, 255] },
+      margin: { left: 14, right: 14 },
     });
 
-    doc.save("driver_report.pdf");
+    if (action === "save") {
+      doc.save(`DriverReport_${statusFilter}_${dispatchFilter}_${new Date().getTime()}.pdf`);
+    } else {
+      doc.autoPrint();
+      window.open(doc.output("bloburl"), "_blank");
+    }
   };
 
+  // --- Export CSV ---
   const exportCSV = () => {
-    const headers = "Code,First Name,Last Name,NIC,Contact Number,Emergency Contact,Manual Dispatch,Blocked,Last Location,App Version";
-    const rows = filteredData.map(
-      (d) =>
-        `${d.code},${d.firstName},${d.lastName},${d.nic},${d.contactNumber},${d.emergencyContactNumber},${d.manualDispatch},${d.blocked},${d.lastLocation},${d.appVersion}`
+    const headers = ["Code", "First Name", "Last Name", "NIC", "Contact Number", "Emergency Contact", "Manual Dispatch", "Blocked", "Last Location", "App Version"];
+    const rows = filteredData.map((d) =>
+      [d.code, d.firstName, d.lastName, d.nic, d.contactNumber, d.emergencyContactNumber, d.manualDispatch, d.blocked, d.lastLocation, d.appVersion]
+        .map((cell) => `"${cell}"`)
+        .join(",")
     );
-    const csv = [headers, ...rows].join("\n");
-    
-    const blob = new Blob([csv], { type: "text/csv" });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "driver_report.csv";
+    link.download = `DriverReport_${statusFilter}_${dispatchFilter}_${new Date().getTime()}.csv`;
     link.click();
   };
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
-      
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#6330B8]">Driver Report</h1>
-          <p className="text-muted-foreground mt-1">View and analyze driver information</p>
+          <h1 className="text-3xl font-bold text-purple-700">Driver Report</h1>
+          <p className="text-muted-foreground mt-1">
+            Viewing {filteredData.length} records
+            {(statusFilter !== "all" || dispatchFilter !== "all") &&
+              ` (filtered by ${statusFilter !== "all" ? statusFilter : ""} ${
+                dispatchFilter !== "all" ? dispatchFilter : ""
+              })`}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -409,10 +481,17 @@ export default function DriverReport() {
             onClick={exportCSV}
             className="border-green-600 text-green-700 hover:bg-green-50"
           >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
+            <FileSpreadsheet className="mr-2 h-4 w-4" /> CSV
           </Button>
-          <Button className="bg-[#6330B8] hover:bg-[#6330B8]/90" onClick={exportPDF}>
-            <FileText className="mr-2 h-4 w-4" /> Export PDF
+          <Button
+            variant="outline"
+            onClick={() => generateReport("print")}
+            className="border-purple-600 text-purple-700 hover:bg-purple-50"
+          >
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => generateReport("save")}>
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
           </Button>
         </div>
       </div>
@@ -421,13 +500,13 @@ export default function DriverReport() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card
           className={`cursor-pointer transition-all hover:shadow-md ${
-            statusFilter === "all" ? "ring-2 ring-[#6330B8] bg-purple-50/50" : ""
+            statusFilter === "all" ? "ring-2 ring-purple-600 bg-purple-50/50" : ""
           }`}
           onClick={() => setStatusFilter("all")}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Drivers</CardTitle>
-            <Users className="h-4 w-4 text-[#6330B8]" />
+            <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -479,11 +558,76 @@ export default function DriverReport() {
         </Card>
       </div>
 
+      {/* Filter Buttons */}
+      <div className="space-y-3">
+        {/* Status Filters */}
+        <div className="flex flex-wrap gap-2">
+          <span className="text-sm font-medium text-gray-600 flex items-center mr-2">
+            <Filter className="h-4 w-4 mr-1" /> Status:
+          </span>
+          <Button
+            variant={statusFilter === "all" ? "default" : "outline"}
+            onClick={() => setStatusFilter("all")}
+            className={statusFilter === "all" ? "bg-purple-600" : ""}
+            size="sm"
+          >
+            <Users className="mr-2 h-4 w-4" /> All Drivers
+          </Button>
+          <Button
+            variant={statusFilter === "active" ? "default" : "outline"}
+            onClick={() => setStatusFilter("active")}
+            className={statusFilter === "active" ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+            size="sm"
+          >
+            <CheckCircle className="mr-2 h-4 w-4" /> Active Only
+          </Button>
+          <Button
+            variant={statusFilter === "blocked" ? "default" : "outline"}
+            onClick={() => setStatusFilter("blocked")}
+            className={statusFilter === "blocked" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+            size="sm"
+          >
+            <XCircle className="mr-2 h-4 w-4" /> Blocked Only
+          </Button>
+        </div>
+
+        {/* Dispatch Filters */}
+        <div className="flex flex-wrap gap-2">
+          <span className="text-sm font-medium text-gray-600 flex items-center mr-2">
+            <Shield className="h-4 w-4 mr-1" /> Dispatch Type:
+          </span>
+          <Button
+            variant={dispatchFilter === "all" ? "default" : "outline"}
+            onClick={() => setDispatchFilter("all")}
+            className={dispatchFilter === "all" ? "bg-purple-600" : ""}
+            size="sm"
+          >
+            All Types
+          </Button>
+          <Button
+            variant={dispatchFilter === "manual" ? "default" : "outline"}
+            onClick={() => setDispatchFilter("manual")}
+            className={dispatchFilter === "manual" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+            size="sm"
+          >
+            Manual Dispatch
+          </Button>
+          <Button
+            variant={dispatchFilter === "auto" ? "default" : "outline"}
+            onClick={() => setDispatchFilter("auto")}
+            className={dispatchFilter === "auto" ? "bg-gray-600 hover:bg-gray-700 text-white" : ""}
+            size="sm"
+          >
+            Auto Dispatch
+          </Button>
+        </div>
+      </div>
+
       {/* Data Table Card */}
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between border-b">
-          <CardTitle className="flex items-center gap-2 text-[#6330B8]">
-            <Users className="h-5 w-5" />
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Users className="h-5 w-5 text-purple-600" />
             Driver Directory
           </CardTitle>
           <Badge variant="outline" className="text-muted-foreground">
@@ -492,14 +636,11 @@ export default function DriverReport() {
         </CardHeader>
         <CardContent className="pt-4">
           <EnhancedDataTable
-            key={statusFilter} // Re-render table when filter changes
+            key={`${statusFilter}-${dispatchFilter}`}
             columns={columns}
             data={filteredData}
-            searchKey="fullName" // Search by full name
+            searchKey="fullName"
             searchPlaceholder="Search by name or code..."
-            enableColumnVisibility={true}
-            pageSize={10}
-            filters={tableFilters}
           />
         </CardContent>
       </Card>

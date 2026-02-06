@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Plus, X, Building2 } from "lucide-react"; 
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 export default function AddNewBooking() {
   const navigate = useNavigate();
@@ -23,13 +24,15 @@ export default function AddNewBooking() {
 
   const [formData, setFormData] = useState({
     customerName: booking?.customer || "",
+    isCorporate: !!booking?.organization, // Auto-check if organization exists
     corporateId: booking?.organization || "",
     contactNumber: booking?.passengerNumber || "",
     name: booking?.customer || "",
-    numberOfPassengers: "0",
+    numberOfPassengers: "1",
     hireType: booking?.hireType || "On The Meter",
     pickupTime: booking?.pickupTime || "",
     pickupAddress: booking?.pickupAddress || "",
+    stops: [""], 
     dropAddress: booking?.dropAddress || "",
     specialRemarks: "",
     luggage: "0.00",
@@ -45,9 +48,7 @@ export default function AddNewBooking() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle save logic here
-    console.log("Saving booking with data:", formData);
-    // Navigate back to pending bookings after successful save
+    console.log("Saving booking:", formData);
     navigate("/admin/bookings/pending");
   };
 
@@ -55,26 +56,32 @@ export default function AddNewBooking() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleStopChange = (index: number, value: string) => {
+    const newStops = [...formData.stops];
+    newStops[index] = value;
+    setFormData((prev) => ({ ...prev, stops: newStops }));
+  };
+
+  const addStop = () => {
+    setFormData((prev) => ({ ...prev, stops: [...prev.stops, ""] }));
+  };
+
+  const removeStop = (index: number) => {
+    const newStops = formData.stops.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, stops: newStops }));
+  };
+
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/admin/bookings/pending")}
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin/bookings/pending")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-[#6330B8]">
               {booking ? "Edit Booking" : "Add New Booking"}
             </h1>
-            <p className="text-muted-foreground mt-1">
-              {booking 
-                ? `Edit booking details for #${booking.bookingNumber}` 
-                : "Create a new booking for a customer"}
-            </p>
           </div>
         </div>
         <Button onClick={handleSubmit} className="bg-[#6330B8] hover:bg-[#5028a0]">
@@ -83,295 +90,144 @@ export default function AddNewBooking() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Personal Details */}
+        {/* Personal & Corporate Details */}
         <Card>
-          <CardHeader>
-            <CardTitle>Personal Details</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Personal & Corporate Details</CardTitle>
+            <div className="flex items-center space-x-2 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
+              <Checkbox 
+                id="isCorporate" 
+                checked={formData.isCorporate} 
+                onCheckedChange={(checked) => handleChange("isCorporate", checked as boolean)}
+              />
+              <Label htmlFor="isCorporate" className="text-xs font-semibold text-[#6330B8] cursor-pointer">
+                Corporate Booking
+              </Label>
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="customerName">Customer</Label>
-              <Input
-                id="customerName"
-                value={formData.customerName}
-                onChange={(e) => handleChange("customerName", e.target.value)}
+              <Label>Customer Name</Label>
+              <Input 
+                value={formData.customerName} 
+                onChange={(e) => handleChange("customerName", e.target.value)} 
                 placeholder="Enter customer name"
               />
             </div>
+
+            {/* CORPORATE ID SECTION - Shows only if isCorporate is true */}
+            {formData.isCorporate && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-300">
+                <Label className="flex items-center gap-2 text-blue-600">
+                  <Building2 className="h-4 w-4" /> Corporate ID / Organization
+                </Label>
+                <Input 
+                  value={formData.corporateId} 
+                  onChange={(e) => handleChange("corporateId", e.target.value)} 
+                  placeholder="e.g. PGIE, Inbay, Codezync"
+                  className="border-blue-200 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="corporateId">Corporate Id</Label>
-              <Input
-                id="corporateId"
-                value={formData.corporateId}
-                onChange={(e) => handleChange("corporateId", e.target.value)}
-                placeholder="Enter corporate ID"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contactNumber">Contact #</Label>
-              <Input
-                id="contactNumber"
-                value={formData.contactNumber}
-                onChange={(e) => handleChange("contactNumber", e.target.value)}
-                placeholder="Enter contact number"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="Enter passenger name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="numberOfPassengers">No. of Pass</Label>
-              <Input
-                id="numberOfPassengers"
-                type="number"
-                value={formData.numberOfPassengers}
-                onChange={(e) =>
-                  handleChange("numberOfPassengers", e.target.value)
-                }
+              <Label>Contact Number</Label>
+              <Input 
+                value={formData.contactNumber} 
+                onChange={(e) => handleChange("contactNumber", e.target.value)} 
+                placeholder="Enter phone number"
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Pickup Information */}
+        {/* Pickup & Stops Information */}
         <Card>
-          <CardHeader>
-            <CardTitle>Pickup Information</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hireType">Hire Type</Label>
-              <Select
-                value={formData.hireType}
-                onValueChange={(value) => handleChange("hireType", value)}
-              >
-                <SelectTrigger id="hireType">
-                  <SelectValue placeholder="Select hire type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="On The Meter">On The Meter</SelectItem>
-                  <SelectItem value="Fixed Rate">Fixed Rate</SelectItem>
-                  <SelectItem value="Package">Package</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pickupTime">Pickup Time</Label>
-              <Input
-                id="pickupTime"
-                type="datetime-local"
-                value={formData.pickupTime?.replace(" ", "T").slice(0, 16) || ""}
-                onChange={(e) => handleChange("pickupTime", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pickupAddress">Pickup Address</Label>
-              <Input
-                id="pickupAddress"
-                value={formData.pickupAddress}
-                onChange={(e) => handleChange("pickupAddress", e.target.value)}
-                placeholder="Enter pickup address"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dropAddress">Drop Address</Label>
-              <Input
-                id="dropAddress"
-                value={formData.dropAddress}
-                onChange={(e) => handleChange("dropAddress", e.target.value)}
-                placeholder="Enter drop address"
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="specialRemarks">Special Remarks</Label>
-              <Textarea
-                id="specialRemarks"
-                value={formData.specialRemarks}
-                onChange={(e) =>
-                  handleChange("specialRemarks", e.target.value)
-                }
-                placeholder="Enter any special remarks"
-                rows={2}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Other Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Other Information</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Route Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="luggage">Luggage (Kg)</Label>
-                <Input
-                  id="luggage"
-                  type="number"
-                  step="0.01"
-                  value={formData.luggage}
-                  onChange={(e) => handleChange("luggage", e.target.value)}
-                />
+                <Label>Pickup Time</Label>
+                <Input type="datetime-local" value={formData.pickupTime?.replace(" ", "T").slice(0, 16) || ""} onChange={(e) => handleChange("pickupTime", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="remarks">Remarks</Label>
-                <Textarea
-                  id="remarks"
-                  value={formData.remarks}
-                  onChange={(e) => handleChange("remarks", e.target.value)}
-                  placeholder="Enter remarks"
-                  rows={3}
-                />
+                <Label>Pickup Address</Label>
+                <Input value={formData.pickupAddress} onChange={(e) => handleChange("pickupAddress", e.target.value)} placeholder="Start location" />
               </div>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="advBooking"
-                  checked={formData.isAdvanceBooking}
-                  onCheckedChange={(checked) =>
-                    handleChange("isAdvanceBooking", checked as boolean)
-                  }
-                />
-                <Label htmlFor="advBooking" className="cursor-pointer">
-                  Adv Booking
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="testBooking"
-                  checked={formData.isTestBooking}
-                  onCheckedChange={(checked) =>
-                    handleChange("isTestBooking", checked as boolean)
-                  }
-                />
-                <Label htmlFor="testBooking" className="cursor-pointer">
-                  Test Booking
-                </Label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Inquiry */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Inquiry</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="inquiryOnly"
-                checked={formData.isInquiryOnly}
-                onCheckedChange={(checked) =>
-                  handleChange("isInquiryOnly", checked as boolean)
-                }
-              />
-              <Label htmlFor="inquiryOnly" className="cursor-pointer">
-                Inquiry Only
-              </Label>
+            {/* STOPS SECTION */}
+            <div className="space-y-3 pt-2 border-t border-dashed">
+              <div className="flex items-center justify-between">
+                <Label className="text-[#6330B8] font-semibold">Intermediate Stops</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addStop} className="h-7 text-xs gap-1 hover:bg-purple-50">
+                  <Plus className="h-3 w-3" /> Add Stop
+                </Button>
+              </div>
+              
+              {formData.stops.map((stop, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Badge variant="secondary" className="w-16 h-10 justify-center">Stop {index + 1}</Badge>
+                  <Input 
+                    value={stop} 
+                    onChange={(e) => handleStopChange(index, e.target.value)} 
+                    placeholder="Enter waypoint address" 
+                    className="flex-grow"
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Destination */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Destination</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="destination">Destination/Dropoff</Label>
-              <Input
-                id="destination"
-                value={formData.destination}
-                onChange={(e) => handleChange("destination", e.target.value)}
-                placeholder="Enter destination"
-              />
+            <div className="space-y-2 pt-2 border-t">
+              <Label className="font-bold text-green-700">Final Destination Address</Label>
+              <Input value={formData.dropAddress} onChange={(e) => handleChange("dropAddress", e.target.value)} placeholder="Final destination" className="border-green-200" />
             </div>
           </CardContent>
         </Card>
 
         {/* Vehicle Information */}
         <Card>
-          <CardHeader>
-            <CardTitle>Vehicle Information</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="vehicleClass">Vehicle Class</Label>
-              <Select
-                value={formData.vehicleClass}
-                onValueChange={(value) => handleChange("vehicleClass", value)}
-              >
-                <SelectTrigger id="vehicleClass">
-                  <SelectValue placeholder="Select vehicle class" />
-                </SelectTrigger>
+          <CardHeader><CardTitle>Vehicle & Booking Options</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div className="space-y-2">
+              <Label>Vehicle Class</Label>
+              <Select value={formData.vehicleClass} onValueChange={(v) => handleChange("vehicleClass", v)}>
+                <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Bus">Bus</SelectItem>
                   <SelectItem value="Van">Van</SelectItem>
                   <SelectItem value="ECO">ECO</SelectItem>
-                  <SelectItem value="EX">EX</SelectItem>
-                  <SelectItem value="Luxury">Luxury</SelectItem>
                   <SelectItem value="Standard">Standard</SelectItem>
+                  <SelectItem value="Tuk">Tuk</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fareScheme">Fare Scheme</Label>
-              <Select
-                value={formData.fareScheme}
-                onValueChange={(value) => handleChange("fareScheme", value)}
-              >
-                <SelectTrigger id="fareScheme">
-                  <SelectValue placeholder="Select fare scheme" />
-                </SelectTrigger>
+              <Label>Hire Type</Label>
+              <Select value={formData.hireType} onValueChange={(v) => handleChange("hireType", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Mileage Calculator">Mileage Calculator</SelectItem>
-                  <SelectItem value="Commission">Commission</SelectItem>
-                  <SelectItem value="Fixed">Fixed</SelectItem>
-                  <SelectItem value="Metered">Metered</SelectItem>
+                  <SelectItem value="On The Meter">On The Meter</SelectItem>
+                  <SelectItem value="Fixed Rate">Fixed Rate</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="paymentType">Payment Type</Label>
-              <Select
-                value={formData.paymentType}
-                onValueChange={(value) => handleChange("paymentType", value)}
-              >
-                <SelectTrigger id="paymentType">
-                  <SelectValue placeholder="Select payment type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Credit Payments">Credit Payments</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Card">Card</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-end pb-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox id="adv" checked={formData.isAdvanceBooking} onCheckedChange={(c) => handleChange("isAdvanceBooking", c as boolean)} />
+                <Label htmlFor="adv" className="cursor-pointer">Advance Booking</Label>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
         <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/admin/bookings/pending")}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-[#6330B8] hover:bg-[#5028a0]">
-            <Save className="mr-2 h-4 w-4" /> Save Booking
+          <Button type="button" variant="outline" onClick={() => navigate("/admin/bookings/pending")}>Cancel</Button>
+          <Button type="submit" className="bg-[#6330B8] hover:bg-[#5028a0] h-11 px-8">
+            <Save className="mr-2 h-5 w-5" /> Save Booking Details
           </Button>
         </div>
       </form>

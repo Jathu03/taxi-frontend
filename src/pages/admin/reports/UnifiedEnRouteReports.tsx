@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
@@ -11,6 +12,7 @@ import {
   Navigation,
   MapPin,
   Clock,
+  Printer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +33,27 @@ export type EnRouteBooking = {
   status: "EnRoute";
 };
 
-// --- Mock Data ---
+// --- Helper for Logo ---
+const getBase64ImageFromURL = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute("crossOrigin", "anonymous");
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = (error) => reject(error);
+    img.src = url;
+  });
+};
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ENROUTE (Non-Tuk Vehicles)
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Mock Data ---
 const enRouteData = [
   {
     id: "e1",
@@ -127,9 +145,6 @@ const enRouteData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK ENROUTE
-// ═══════════════════════════════════════════════════════════════════════════
 const tukEnRouteData = [
   {
     id: "te1",
@@ -193,11 +208,7 @@ const tukEnRouteData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSFORM DATA TO UNIFIED FORMAT
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Regular EnRoute
+// Transform data
 const regularEnRouteBookings: EnRouteBooking[] = enRouteData.map((item) => ({
   id: item.id,
   refNumber: item.bookingNumber,
@@ -211,7 +222,6 @@ const regularEnRouteBookings: EnRouteBooking[] = enRouteData.map((item) => ({
   status: "EnRoute" as const,
 }));
 
-// Tuk EnRoute
 const tukEnRouteBookings: EnRouteBooking[] = tukEnRouteData.map((item) => ({
   id: item.id,
   refNumber: item.bookingNumber,
@@ -225,15 +235,12 @@ const tukEnRouteBookings: EnRouteBooking[] = tukEnRouteData.map((item) => ({
   status: "EnRoute" as const,
 }));
 
-// Combined data
 const allEnRouteData = [
   ...regularEnRouteBookings,
   ...tukEnRouteBookings,
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
+// Helper functions
 const getVehicleBadgeClass = (vehicleType: string) => {
   const colorMap: Record<string, string> = {
     Bus: "bg-orange-100 text-orange-800",
@@ -251,10 +258,6 @@ const getETABadgeClass = (eta: string) => {
   if (minutes <= 7) return "bg-yellow-100 text-yellow-800 border-yellow-300";
   return "bg-orange-100 text-orange-800 border-orange-300";
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// COLUMN DEFINITIONS
-// ═══════════════════════════════════════════════════════════════════════════
 
 const selectColumn: ColumnDef<EnRouteBooking> = {
   id: "select",
@@ -279,15 +282,12 @@ const selectColumn: ColumnDef<EnRouteBooking> = {
   enableHiding: false,
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// REGULAR ENROUTE COLUMNS (Non-Tuk)
-// Columns: Booking ID, Customer, Driver, Vehicle, Pickup, Current Location, ETA
-// ═══════════════════════════════════════════════════════════════════════════
+// Regular columns
 const regularEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking ID",
+    header: () => <span className="font-bold text-black">Booking ID</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -296,27 +296,27 @@ const regularEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "driver",
-    header: "Driver",
+    header: () => <span className="font-bold text-black">Driver</span>,
     cell: ({ row }) => (
       <span className="font-medium">{row.getValue("driver")}</span>
     ),
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle",
+    header: () => <span className="font-bold text-black">Vehicle</span>,
     cell: ({ row }) => {
       const vehicle = row.getValue("vehicle") as string;
       const vehicleType = row.original.vehicleType;
       return (
         <div className="space-y-1">
-          <span className="font-mono text-sm">{vehicle}</span>
+          <span className="font-mono text-sm font-bold">{vehicle}</span>
           {vehicleType && (
             <Badge className={`${getVehicleBadgeClass(vehicleType)} text-xs`}>
               {vehicleType}
@@ -328,7 +328,7 @@ const regularEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup",
+    header: () => <span className="font-bold text-black">Pickup</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -338,7 +338,7 @@ const regularEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "currentLocation",
-    header: "Current Location",
+    header: () => <span className="font-bold text-black">Current Location</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Navigation className="h-3 w-3 text-blue-500" />
@@ -348,7 +348,7 @@ const regularEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "eta",
-    header: "ETA",
+    header: () => <span className="font-bold text-black">ETA</span>,
     cell: ({ row }) => {
       const eta = row.getValue("eta") as string;
       return (
@@ -361,15 +361,12 @@ const regularEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK ENROUTE COLUMNS
-// Columns: Booking ID, Customer, Driver, TUK Number, Pickup, Current Location, ETA
-// ═══════════════════════════════════════════════════════════════════════════
+// Tuk columns
 const tukEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking ID",
+    header: () => <span className="font-bold text-black">Booking ID</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -378,21 +375,21 @@ const tukEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "driver",
-    header: "Driver",
+    header: () => <span className="font-bold text-black">Driver</span>,
     cell: ({ row }) => (
       <span className="font-medium">{row.getValue("driver")}</span>
     ),
   },
   {
     accessorKey: "vehicle",
-    header: "TUK Number",
+    header: () => <span className="font-bold text-black">TUK Number</span>,
     cell: ({ row }) => {
       const vehicle = row.getValue("vehicle") as string;
       return (
@@ -405,7 +402,7 @@ const tukEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup",
+    header: () => <span className="font-bold text-black">Pickup</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -415,7 +412,7 @@ const tukEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "currentLocation",
-    header: "Current Location",
+    header: () => <span className="font-bold text-black">Current Location</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Navigation className="h-3 w-3 text-blue-500" />
@@ -425,7 +422,7 @@ const tukEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "eta",
-    header: "ETA",
+    header: () => <span className="font-bold text-black">ETA</span>,
     cell: ({ row }) => {
       const eta = row.getValue("eta") as string;
       return (
@@ -438,14 +435,12 @@ const tukEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COMBINED COLUMNS (All vehicles)
-// ═══════════════════════════════════════════════════════════════════════════
+// Combined columns
 const combinedEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking ID",
+    header: () => <span className="font-bold text-black">Booking ID</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -454,21 +449,21 @@ const combinedEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "driver",
-    header: "Driver",
+    header: () => <span className="font-bold text-black">Driver</span>,
     cell: ({ row }) => (
       <span className="font-medium">{row.getValue("driver")}</span>
     ),
   },
   {
     accessorKey: "vehicleType",
-    header: "Vehicle Type",
+    header: () => <span className="font-bold text-black">Vehicle Type</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -485,16 +480,16 @@ const combinedEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle/Tuk #",
+    header: () => <span className="font-bold text-black">Vehicle/Tuk #</span>,
     cell: ({ row }) => (
-      <span className="font-mono text-sm">
+      <span className="font-mono text-sm font-bold">
         {row.getValue("vehicle")}
       </span>
     ),
   },
   {
     accessorKey: "pickup",
-    header: "Pickup",
+    header: () => <span className="font-bold text-black">Pickup</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -504,7 +499,7 @@ const combinedEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "currentLocation",
-    header: "Current Location",
+    header: () => <span className="font-bold text-black">Current Location</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Navigation className="h-3 w-3 text-blue-500" />
@@ -514,7 +509,7 @@ const combinedEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
   {
     accessorKey: "eta",
-    header: "ETA",
+    header: () => <span className="font-bold text-black">ETA</span>,
     cell: ({ row }) => {
       const eta = row.getValue("eta") as string;
       return (
@@ -527,25 +522,16 @@ const combinedEnRouteColumns: ColumnDef<EnRouteBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// FILTER STATE TYPE
-// ═══════════════════════════════════════════════════════════════════════════
 type VehicleFilter = "all" | "Tuk" | "nonTuk";
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
 export default function UnifiedEnRouteReports() {
   const [vehicleFilter, setVehicleFilter] = useState<VehicleFilter>("all");
 
-  // All data combined
   const allBookingsData = useMemo(() => allEnRouteData, []);
 
-  // Filter data based on vehicle filters
   const filteredData = useMemo(() => {
     let result = [...allBookingsData];
 
-    // Filter by vehicle
     if (vehicleFilter === "Tuk") {
       result = result.filter((item) => item.vehicleType === "Tuk");
     } else if (vehicleFilter === "nonTuk") {
@@ -555,13 +541,11 @@ export default function UnifiedEnRouteReports() {
     return result;
   }, [allBookingsData, vehicleFilter]);
 
-  // Stats calculation
   const stats = useMemo(() => {
     const all = allBookingsData;
     const tuk = all.filter((d) => d.vehicleType === "Tuk");
     const nonTuk = all.filter((d) => d.vehicleType !== "Tuk");
     
-    // ETA stats
     const urgent = all.filter(d => parseInt(d.eta) <= 3);
     const near = all.filter(d => parseInt(d.eta) > 3 && parseInt(d.eta) <= 7);
     const approaching = all.filter(d => parseInt(d.eta) > 7);
@@ -577,7 +561,6 @@ export default function UnifiedEnRouteReports() {
     };
   }, [allBookingsData, filteredData]);
 
-  // Get columns based on current filter state
   const currentColumns = useMemo(() => {
     if (vehicleFilter === "Tuk") {
       return tukEnRouteColumns;
@@ -587,11 +570,9 @@ export default function UnifiedEnRouteReports() {
     return combinedEnRouteColumns;
   }, [vehicleFilter]);
 
-  // Get dynamic filters for the table
   const tableFilters = useMemo(() => {
     const filters = [];
 
-    // Vehicle type filter
     const vehicleOptions = [
       { value: "Bus", label: "Bus" },
       { value: "Luxury", label: "Luxury" },
@@ -609,7 +590,6 @@ export default function UnifiedEnRouteReports() {
     return filters;
   }, []);
 
-  // Get title based on filters
   const getTitle = () => {
     if (vehicleFilter === "Tuk") {
       return "Tuk EnRoute";
@@ -620,7 +600,6 @@ export default function UnifiedEnRouteReports() {
     return "All EnRoute Bookings";
   };
 
-  // Get subtitle
   const getSubtitle = () => {
     const parts = [];
     
@@ -634,19 +613,43 @@ export default function UnifiedEnRouteReports() {
     return parts.join(" • ");
   };
 
-  // PDF Export
-  const exportPDF = () => {
+  // --- PDF & Print Logic ---
+  const generateReport = async (action: "save" | "print") => {
     const doc = new jsPDF({ orientation: "landscape" });
 
-    doc.setFontSize(20);
-    doc.setTextColor(59, 130, 246); // Blue for enroute
-    doc.text("EnRoute Booking Report", 14, 22);
+    // 1. Add Logo
+    try {
+      const logoData = await getBase64ImageFromURL("/logo.png");
+      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
+    } catch (e) {
+      console.error("Logo missing", e);
+    }
 
-    doc.setFontSize(11);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
-    doc.text(`View: ${getTitle()}`, 14, 36);
-    doc.text(`Total Records: ${filteredData.length}`, 14, 42);
+    // 2. Main Title
+    doc.setFontSize(22);
+    doc.setTextColor(59, 130, 246); // Blue
+    doc.text("EnRoute Bookings Audit Report", 40, 22);
+
+    // 3. Metadata
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 28);
+
+    // 4. --- APPLIED FILTERS SECTION ---
+    doc.setDrawColor(200);
+    doc.line(14, 35, 283, 35);
+
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applied Report Filters:", 14, 42);
+
+    doc.setFont("helvetica", "normal");
+    const vehicleText = vehicleFilter === "all" ? "All Vehicles" : vehicleFilter === "Tuk" ? "Tuk Only" : "Cars/Buses Only";
+    
+    doc.text(`Vehicle Category: ${vehicleText}`, 14, 48);
+    doc.text(`Total Records in Database: ${allBookingsData.length}`, 14, 53);
+    doc.text(`Filtered Records: ${filteredData.length}`, 14, 58);
 
     let tableColumn: string[];
     let tableRows: string[][];
@@ -712,25 +715,22 @@ export default function UnifiedEnRouteReports() {
       ]);
     }
 
+    // 5. Table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 48,
-      headStyles: {
-        fillColor: [59, 130, 246], // Blue for enroute
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [245, 247, 250],
-      },
-      styles: {
-        fontSize: 7,
-        cellPadding: 2,
-      },
+      startY: 65,
+      headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
+      styles: { fontSize: 8 },
+      margin: { left: 14, right: 14 },
     });
 
-    doc.save(`enroute_report_${vehicleFilter}.pdf`);
+    if (action === "save") {
+      doc.save(`EnRouteReport_${vehicleFilter}_${new Date().getTime()}.pdf`);
+    } else {
+      doc.autoPrint();
+      window.open(doc.output("bloburl"), "_blank");
+    }
   };
 
   // CSV Export
@@ -749,13 +749,13 @@ export default function UnifiedEnRouteReports() {
         "ETA",
       ];
       rows = filteredData.map((row) => [
-        row.refNumber,
-        `"${row.customer}"`,
-        `"${row.driver}"`,
-        row.vehicle,
-        `"${row.pickup}"`,
-        `"${row.currentLocation}"`,
-        row.eta,
+        String(row.refNumber),
+        String(row.customer),
+        String(row.driver),
+        String(row.vehicle),
+        String(row.pickup),
+        String(row.currentLocation),
+        String(row.eta),
       ]);
     } else if (vehicleFilter === "nonTuk") {
       headers = [
@@ -769,14 +769,14 @@ export default function UnifiedEnRouteReports() {
         "ETA",
       ];
       rows = filteredData.map((row) => [
-        row.refNumber,
-        `"${row.customer}"`,
-        `"${row.driver}"`,
-        row.vehicle,
-        row.vehicleType || "N/A",
-        `"${row.pickup}"`,
-        `"${row.currentLocation}"`,
-        row.eta,
+        String(row.refNumber),
+        String(row.customer),
+        String(row.driver),
+        String(row.vehicle),
+        String(row.vehicleType || "N/A"),
+        String(row.pickup),
+        String(row.currentLocation),
+        String(row.eta),
       ]);
     } else {
       headers = [
@@ -790,37 +790,25 @@ export default function UnifiedEnRouteReports() {
         "ETA",
       ];
       rows = filteredData.map((row) => [
-        row.refNumber,
-        `"${row.customer}"`,
-        `"${row.driver}"`,
-        row.vehicleType || "N/A",
-        row.vehicle,
-        `"${row.pickup}"`,
-        `"${row.currentLocation}"`,
-        row.eta,
+        String(row.refNumber),
+        String(row.customer),
+        String(row.driver),
+        String(row.vehicleType || "N/A"),
+        String(row.vehicle),
+        String(row.pickup),
+        String(row.currentLocation),
+        String(row.eta),
       ]);
     }
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((r) => r.join(",")),
-    ].join("\n");
-
+    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `enroute_report_${vehicleFilter}.csv`
-    );
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `EnRouteReport_${vehicleFilter}_${new Date().getTime()}.csv`;
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
-  // Reset all filters
   const resetFilters = () => {
     setVehicleFilter("all");
   };
@@ -834,7 +822,8 @@ export default function UnifiedEnRouteReports() {
             EnRoute Bookings Report
           </h1>
           <p className="text-muted-foreground mt-1">
-            Live tracking of all vehicles currently enroute to pickup
+            Viewing {filteredData.length} records
+            {vehicleFilter !== "all" && ` (filtered by ${vehicleFilter})`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -843,13 +832,20 @@ export default function UnifiedEnRouteReports() {
             className="border-blue-600 text-blue-700 hover:bg-blue-50"
             onClick={exportCSV}
           >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
+            <FileSpreadsheet className="mr-2 h-4 w-4" /> CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => generateReport("print")}
+            className="border-blue-600 text-blue-700 hover:bg-blue-50"
+          >
+            <Printer className="mr-2 h-4 w-4" /> Print
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700"
-            onClick={exportPDF}
+            onClick={() => generateReport("save")}
           >
-            <FileText className="mr-2 h-4 w-4" /> Export PDF
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
           </Button>
         </div>
       </div>
@@ -857,10 +853,11 @@ export default function UnifiedEnRouteReports() {
       {/* ETA Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-green-200 bg-green-50/50">
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-green-700">
               Arriving Soon
             </CardTitle>
+            <Clock className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-700">{stats.urgent}</div>
@@ -868,10 +865,11 @@ export default function UnifiedEnRouteReports() {
           </CardContent>
         </Card>
         <Card className="border-yellow-200 bg-yellow-50/50">
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-yellow-700">
               Near Pickup
             </CardTitle>
+            <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-700">{stats.near}</div>
@@ -879,10 +877,11 @@ export default function UnifiedEnRouteReports() {
           </CardContent>
         </Card>
         <Card className="border-orange-200 bg-orange-50/50">
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-orange-700">
               Approaching
             </CardTitle>
+            <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-700">{stats.approaching}</div>
@@ -897,7 +896,6 @@ export default function UnifiedEnRouteReports() {
           Filter by Vehicle Type
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
-          {/* All Vehicles */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "all"
@@ -926,7 +924,6 @@ export default function UnifiedEnRouteReports() {
             </CardContent>
           </Card>
 
-          {/* Tuk Only */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "Tuk"
@@ -953,7 +950,6 @@ export default function UnifiedEnRouteReports() {
             </CardContent>
           </Card>
 
-          {/* Non-Tuk */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "nonTuk"
@@ -1013,10 +1009,10 @@ export default function UnifiedEnRouteReports() {
 
       {/* Table Card */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 border-b">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Navigation className="h-5 w-5 text-blue-600" />
                 {getTitle()}
               </CardTitle>
@@ -1024,7 +1020,6 @@ export default function UnifiedEnRouteReports() {
                 {getSubtitle()}
               </p>
             </div>
-            {/* Column set indicator */}
             <Badge variant="outline" className="self-start">
               {vehicleFilter === "Tuk"
                 ? "7 Columns (Tuk Format)"
@@ -1034,16 +1029,13 @@ export default function UnifiedEnRouteReports() {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          {/* Key forces re-render when filters change */}
+        <CardContent className="pt-4">
           <EnhancedDataTable
             key={`${vehicleFilter}-enroute`}
             columns={currentColumns}
             data={filteredData}
             searchKey="customer"
             searchPlaceholder="Search by customer name..."
-            enableColumnVisibility={true}
-            pageSize={10}
             filters={tableFilters}
           />
         </CardContent>

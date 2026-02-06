@@ -2,15 +2,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/DataTableLayout";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Send, Trash, Edit } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { DeleteDialog } from "@/components/DeleteDialog";
+import { Send, Trash, Edit } from "lucide-react";
 import { useDataTable } from "@/hooks/useDataTable";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -33,50 +25,102 @@ export type TukPendingBooking = {
 };
 
 const columns = (
-  onDelete: (id: string) => void,
   navigate: ReturnType<typeof useNavigate>
 ): ColumnDef<TukPendingBooking>[] => [
-  { accessorKey: "bookingNumber", header: "Booking #" },
-  { accessorKey: "isAdvance", header: "Is Adv" },
-  { accessorKey: "organization", header: "Organization" },
-  { accessorKey: "customer", header: "Customer" },
-  { accessorKey: "passengerNumber", header: "Passenger #" },
-  { accessorKey: "hireType", header: "Hire Type" },
-  { accessorKey: "clientRemarks", header: "Client Remarks" },
-  { accessorKey: "bookingTime", header: "Booking Time" },
-  { accessorKey: "bookedBy", header: "Booked By" },
-  { accessorKey: "pickupTime", header: "Pickup Time" },
-  { accessorKey: "pickupAddress", header: "Pickup Address" },
-  { accessorKey: "dropAddress", header: "Drop Address" },
-  { accessorKey: "vehicleClass", header: "Vehicle Class" },
-  {
-    id: "actions",
-    header: "Actions",
+  { 
+    accessorKey: "bookingNumber", 
+    header: () => <span className="font-bold text-black">Booking #</span>,
     cell: ({ row }) => {
       const booking = row.original;
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate('/admin/bookings/dispatch-vehicle', { state: { booking } })}>
-              <Send className="mr-2 h-4 w-4" /> Dispatch
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/admin/bookings/add-new-booking', { state: { booking } })}>
-              <Edit className="mr-2 h-4 w-4" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => navigate('/admin/bookings/cancel-booking', { state: { booking } })}
-              className="text-red-600"
-            >
-              <Trash className="mr-2 h-4 w-4" /> Cancel
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex flex-col gap-2">
+          <span className="font-mono font-bold text-primary">
+            {booking.bookingNumber}
+          </span>
+          <Button 
+            size="sm" 
+            className="h-7 bg-green-600 hover:bg-green-700 text-xs gap-1.5 px-2 w-fit"
+            onClick={() => navigate('/admin/bookings/dispatch-vehicle', { state: { booking } })}
+          >
+            <Send className="h-3 w-3" />
+            Dispatch
+          </Button>
+        </div>
+      );
+    }
+  },
+  { 
+    accessorKey: "isAdvance", 
+    header: () => <span className="font-bold text-black">Is Adv</span> 
+  },
+  { 
+    accessorKey: "organization", 
+    header: () => <span className="font-bold text-black">Organization</span> 
+  },
+  { 
+    accessorKey: "customer", 
+    header: () => <span className="font-bold text-black">Customer</span> 
+  },
+  { 
+    accessorKey: "passengerNumber", 
+    header: () => <span className="font-bold text-black">Passenger #</span> 
+  },
+  { 
+    accessorKey: "hireType", 
+    header: () => <span className="font-bold text-black">Hire Type</span> 
+  },
+  { 
+    accessorKey: "clientRemarks", 
+    header: () => <span className="font-bold text-black">Remarks</span> 
+  },
+  { 
+    accessorKey: "bookingTime", 
+    header: () => <span className="font-bold text-black">Booking Time</span> 
+  },
+  { 
+    accessorKey: "bookedBy", 
+    header: () => <span className="font-bold text-black">Booked By</span> 
+  },
+  { 
+    accessorKey: "pickupTime", 
+    header: () => <span className="font-bold text-black">Pickup Time</span> 
+  },
+  { 
+    accessorKey: "pickupAddress", 
+    header: () => <span className="font-bold text-black">Pickup Address</span> 
+  },
+  { 
+    accessorKey: "dropAddress", 
+    header: () => <span className="font-bold text-black">Drop Address</span> 
+  },
+  { 
+    accessorKey: "vehicleClass", 
+    header: () => <span className="font-bold text-black">Class</span> 
+  },
+  {
+    id: "actions",
+    header: () => <span className="font-bold text-black">Actions</span>,
+    cell: ({ row }) => {
+      const booking = row.original;
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin/bookings/add-new-booking', { state: { booking } })}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+          >
+            <Edit className="mr-2 h-4 w-4" /> Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin/bookings/cancel-booking', { state: { booking } })}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          >
+            <Trash className="mr-2 h-4 w-4" /> Cancel
+          </Button>
+        </div>
       );
     },
   },
@@ -88,7 +132,7 @@ const mockTukPendingBookings: TukPendingBooking[] = [
     bookingNumber: "TUK-295104", 
     isAdvance: "", 
     organization: "Tuk Services", 
-    customer: "Ms. Nadeeka Silva (Ms. Nadeeka Silva )", 
+    customer: "Ms. Nadeeka Silva", 
     passengerNumber: "0776234567", 
     hireType: "On The Meter", 
     clientRemarks: "Short trip to nearby market", 
@@ -104,7 +148,7 @@ const mockTukPendingBookings: TukPendingBooking[] = [
     bookingNumber: "TUK-295731", 
     isAdvance: "", 
     organization: "Quick Rides", 
-    customer: "Ravi Fernando (Ravi Fernando )", 
+    customer: "Ravi Fernando", 
     passengerNumber: "0779876543", 
     hireType: "On The Meter", 
     clientRemarks: "Pick from home to railway station", 
@@ -120,95 +164,15 @@ const mockTukPendingBookings: TukPendingBooking[] = [
     bookingNumber: "TUK-295661", 
     isAdvance: "Yes", 
     organization: "City Tuk", 
-    customer: "Mr. Perera (Mr. Perera )", 
+    customer: "Mr. Perera", 
     passengerNumber: "0771234589", 
     hireType: "Fixed Rate", 
-    clientRemarks: "Hospital visit - Colombo General", 
+    clientRemarks: "Hospital visit", 
     bookingTime: "12/03/2025 16:47", 
     bookedBy: "erandi", 
     pickupTime: "12/04/2025 21:00", 
     pickupAddress: "23 Ward Place, Colombo 7", 
-    dropAddress: "Colombo General Hospital", 
-    vehicleClass: "Tuk" 
-  },
-  { 
-    id: "4", 
-    bookingNumber: "TUK-295733", 
-    isAdvance: "", 
-    organization: "Express Tuk", 
-    customer: "Saman Kumar (Saman Kumar )", 
-    passengerNumber: "0778658530", 
-    hireType: "On The Meter", 
-    clientRemarks: "Office to home", 
-    bookingTime: "12/04/2025 08:24", 
-    bookedBy: "shamalka", 
-    pickupTime: "12/04/2025 22:30", 
-    pickupAddress: "Union Place, Colombo 2", 
-    dropAddress: "Rajagiriya", 
-    vehicleClass: "Tuk" 
-  },
-  { 
-    id: "5", 
-    bookingNumber: "TUK-295732", 
-    isAdvance: "", 
-    organization: "Tuk Express", 
-    customer: "Kamala Dias (Kamala Dias )", 
-    passengerNumber: "0773456789", 
-    hireType: "On The Meter", 
-    clientRemarks: "Quick trip to bank", 
-    bookingTime: "12/04/2025 08:22", 
-    bookedBy: "shamalka", 
-    pickupTime: "12/05/2025 06:30", 
-    pickupAddress: "Nugegoda Junction", 
-    dropAddress: "Peoples Bank, High Level Road", 
-    vehicleClass: "Tuk" 
-  },
-  { 
-    id: "6", 
-    bookingNumber: "TUK-295654", 
-    isAdvance: "", 
-    organization: "Tuk Rides", 
-    customer: "Priyantha Mendis (Priyantha Mendis )", 
-    passengerNumber: "0774584724", 
-    hireType: "On The Meter", 
-    clientRemarks: "Bus stand to home", 
-    bookingTime: "12/03/2025 14:44", 
-    bookedBy: "erandi", 
-    pickupTime: "12/05/2025 07:00", 
-    pickupAddress: "Maharagama Bus Stand", 
-    dropAddress: "Pannipitiya", 
-    vehicleClass: "Tuk" 
-  },
-  { 
-    id: "7", 
-    bookingNumber: "TUK-295650", 
-    isAdvance: "Yes", 
-    organization: "City Tuk Service", 
-    customer: "Anjali Wickrama (Anjali Wickrama)", 
-    passengerNumber: "0771234567", 
-    hireType: "Fixed Rate", 
-    clientRemarks: "Shopping mall trip", 
-    bookingTime: "12/03/2025 10:30", 
-    bookedBy: "admin", 
-    pickupTime: "12/06/2025 05:00", 
-    pickupAddress: "Borella Junction", 
-    dropAddress: "Majestic City", 
-    vehicleClass: "Tuk" 
-  },
-  { 
-    id: "8", 
-    bookingNumber: "TUK-295800", 
-    isAdvance: "", 
-    organization: "Walk-in Tuk", 
-    customer: "Sunil Gunasekara (Sunil Gunasekara)", 
-    passengerNumber: "0779876543", 
-    hireType: "On The Meter", 
-    clientRemarks: "Temple visit", 
-    bookingTime: "12/04/2025 12:15", 
-    bookedBy: "receptionist", 
-    pickupTime: "12/04/2025 14:00", 
-    pickupAddress: "Pelawatte", 
-    dropAddress: "Kelaniya Temple", 
+    dropAddress: "General Hospital", 
     vehicleClass: "Tuk" 
   }
 ];
@@ -218,7 +182,7 @@ export default function TukPendingBookings() {
   const {
     data,
     handleBulkDelete,
-    handleDelete,
+    handleDelete, // Still available if needed for other logic
   } = useDataTable<TukPendingBooking>({
     initialData: mockTukPendingBookings,
   });
@@ -234,7 +198,7 @@ export default function TukPendingBookings() {
       </div>
 
       <EnhancedDataTable
-        columns={columns(handleDelete, navigate)}
+        columns={columns(navigate)}
         data={data}
         searchKey="customer"
         searchPlaceholder="Search by customer name..."
@@ -243,13 +207,6 @@ export default function TukPendingBookings() {
         enableExport
         enableColumnVisibility
         filters={[
-          {
-            key: "vehicleClass",
-            label: "Vehicle Class",
-            options: [
-              { value: "Tuk", label: "Tuk" },
-            ],
-          },
           {
             key: "hireType",
             label: "Hire Type",

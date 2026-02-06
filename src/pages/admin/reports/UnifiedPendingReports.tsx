@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
@@ -10,6 +11,7 @@ import {
   Smartphone,
   Globe,
   Car,
+  Printer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,14 +40,27 @@ export type UnifiedBooking = {
   bookingTime?: string;
 };
 
-// --- Mock Data ---
+// --- Helper for Logo ---
+const getBase64ImageFromURL = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute("crossOrigin", "anonymous");
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = (error) => reject(error);
+    img.src = url;
+  });
+};
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MANUAL/PORTAL PENDING (Non-Tuk Vehicles)
-// Columns: Booking #, Is Adv, Organization, Customer, Passenger #, Hire Type,
-//          Client Remarks, Booking Time, Booked By, Pickup Time, Pickup Address,
-//          Drop Address, Vehicle Class
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Mock Data ---
 const portalPendingData = [
   {
     id: "p1",
@@ -113,12 +128,6 @@ const portalPendingData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK PENDING (Manual/Portal + Tuk)
-// Columns: Booking #, Is Adv, Organization, Customer, Passenger #, Hire Type,
-//          Client Remarks, Booking Time, Booked By, Pickup Time, Pickup Address,
-//          Drop Address, Vehicle Class
-// ═══════════════════════════════════════════════════════════════════════════
 const tukPendingData = [
   {
     id: "tp1",
@@ -170,10 +179,6 @@ const tukPendingData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// APP PENDING (Non-Tuk Vehicles)
-// Columns: Booking ID, Customer, Phone, Pickup, Drop, Vehicle, Time, Platform
-// ═══════════════════════════════════════════════════════════════════════════
 const appPendingData = [
   {
     id: "a1",
@@ -221,10 +226,6 @@ const appPendingData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK APP PENDING (App + Tuk)
-// Columns: Booking ID, Customer, Phone, Pickup, Drop, Vehicle, Time, Platform
-// ═══════════════════════════════════════════════════════════════════════════
 const tukAppPendingData = [
   {
     id: "ta1",
@@ -283,11 +284,7 @@ const tukAppPendingData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSFORM DATA TO UNIFIED FORMAT
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Portal Pending (Non-Tuk) - Manual source
+// Transform data
 const portalBookings: UnifiedBooking[] = portalPendingData.map((item) => ({
   id: item.id,
   refNumber: item.bookingNumber,
@@ -308,7 +305,6 @@ const portalBookings: UnifiedBooking[] = portalPendingData.map((item) => ({
   status: "Pending" as const,
 }));
 
-// Tuk Pending (Manual + Tuk) - Manual source with Tuk vehicle
 const tukPendingBookings: UnifiedBooking[] = tukPendingData.map((item) => ({
   id: item.id,
   refNumber: item.bookingNumber,
@@ -329,7 +325,6 @@ const tukPendingBookings: UnifiedBooking[] = tukPendingData.map((item) => ({
   status: "Pending" as const,
 }));
 
-// App Pending (Non-Tuk) - App source
 const appBookings: UnifiedBooking[] = appPendingData.map((item) => ({
   id: item.id,
   refNumber: item.bookingId,
@@ -344,7 +339,6 @@ const appBookings: UnifiedBooking[] = appPendingData.map((item) => ({
   status: "Pending" as const,
 }));
 
-// Tuk App Pending (App + Tuk) - App source with Tuk vehicle
 const tukAppBookings: UnifiedBooking[] = tukAppPendingData.map((item) => ({
   id: item.id,
   refNumber: item.bookingId,
@@ -359,7 +353,6 @@ const tukAppBookings: UnifiedBooking[] = tukAppPendingData.map((item) => ({
   status: "Pending" as const,
 }));
 
-// Combined data
 const allData = [
   ...portalBookings,
   ...tukPendingBookings,
@@ -367,9 +360,7 @@ const allData = [
   ...tukAppBookings,
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
+// Helper functions
 const getVehicleBadgeClass = (vehicle: string) => {
   const colorMap: Record<string, string> = {
     Bus: "bg-orange-100 text-orange-800",
@@ -380,10 +371,6 @@ const getVehicleBadgeClass = (vehicle: string) => {
   };
   return colorMap[vehicle] || "bg-gray-100 text-gray-800";
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// COLUMN DEFINITIONS
-// ═══════════════════════════════════════════════════════════════════════════
 
 const selectColumn: ColumnDef<UnifiedBooking> = {
   id: "select",
@@ -408,17 +395,12 @@ const selectColumn: ColumnDef<UnifiedBooking> = {
   enableHiding: false,
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MANUAL/PORTAL COLUMNS (for both Tuk and Non-Tuk manual bookings)
-// Columns: Booking #, Is Adv, Organization, Customer, Passenger #, Hire Type,
-//          Client Remarks, Booking Time, Booked By, Pickup Time, Pickup Address,
-//          Drop Address, Vehicle Class
-// ═══════════════════════════════════════════════════════════════════════════
+// Manual columns
 const manualColumns: ColumnDef<UnifiedBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking #",
+    header: () => <span className="font-bold text-black">Booking #</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -427,7 +409,7 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "isAdvance",
-    header: "Is Adv",
+    header: () => <span className="font-bold text-black">Is Adv</span>,
     cell: ({ row }) => {
       const isAdv = row.original.isAdvance;
       return (
@@ -446,7 +428,7 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "organization",
-    header: "Organization",
+    header: () => <span className="font-bold text-black">Organization</span>,
     cell: ({ row }) => (
       <span className="font-medium">
         {row.original.organization || (
@@ -457,14 +439,14 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "contact",
-    header: "Passenger #",
+    header: () => <span className="font-bold text-black">Passenger #</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground font-mono text-sm">
         {row.getValue("contact")}
@@ -473,7 +455,7 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "hireType",
-    header: "Hire Type",
+    header: () => <span className="font-bold text-black">Hire Type</span>,
     cell: ({ row }) => {
       const hireType = row.original.hireType;
       return (
@@ -485,7 +467,7 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "clientRemarks",
-    header: "Client Remarks",
+    header: () => <span className="font-bold text-black">Client Remarks</span>,
     cell: ({ row }) => {
       const remarks = row.original.clientRemarks;
       if (!remarks) {
@@ -503,14 +485,14 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "bookingTime",
-    header: "Booking Time",
+    header: () => <span className="font-bold text-black">Booking Time</span>,
     cell: ({ row }) => (
       <span className="text-sm">{row.original.bookingTime || "N/A"}</span>
     ),
   },
   {
     accessorKey: "bookedBy",
-    header: "Booked By",
+    header: () => <span className="font-bold text-black">Booked By</span>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.bookedBy || "N/A"}
@@ -519,7 +501,7 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "pickupTime",
-    header: "Pickup Time",
+    header: () => <span className="font-bold text-black">Pickup Time</span>,
     cell: ({ row }) => (
       <span className="text-sm font-medium">
         {row.original.pickupTime || "N/A"}
@@ -528,15 +510,15 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup Address",
+    header: () => <span className="font-bold text-black">Pickup Address</span>,
   },
   {
     accessorKey: "drop",
-    header: "Drop Address",
+    header: () => <span className="font-bold text-black">Drop Address</span>,
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle Class",
+    header: () => <span className="font-bold text-black">Vehicle Class</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -553,15 +535,12 @@ const manualColumns: ColumnDef<UnifiedBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// APP COLUMNS (for both Tuk App and Non-Tuk App bookings)
-// Columns: Booking ID, Customer, Phone, Pickup, Drop, Vehicle, Time, Platform
-// ═══════════════════════════════════════════════════════════════════════════
+// App columns
 const appColumns: ColumnDef<UnifiedBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking ID",
+    header: () => <span className="font-bold text-black">Booking ID</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -570,14 +549,14 @@ const appColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "contact",
-    header: "Phone",
+    header: () => <span className="font-bold text-black">Phone</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground font-mono">
         {row.getValue("contact")}
@@ -586,15 +565,15 @@ const appColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup",
+    header: () => <span className="font-bold text-black">Pickup</span>,
   },
   {
     accessorKey: "drop",
-    header: "Drop",
+    header: () => <span className="font-bold text-black">Drop</span>,
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle",
+    header: () => <span className="font-bold text-black">Vehicle</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -611,7 +590,7 @@ const appColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "dateTime",
-    header: "Time",
+    header: () => <span className="font-bold text-black">Time</span>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.getValue("dateTime")}
@@ -620,7 +599,7 @@ const appColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "platform",
-    header: "Platform",
+    header: () => <span className="font-bold text-black">Platform</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -643,16 +622,12 @@ const appColumns: ColumnDef<UnifiedBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COMBINED/ALL COLUMNS (Intersection - Common fields only)
-// Used when both sources are selected or no filter
-// Columns: Ref ID, Source, Customer, Contact, Pickup, Drop, Vehicle, Date/Time
-// ═══════════════════════════════════════════════════════════════════════════
+// Combined columns
 const combinedColumns: ColumnDef<UnifiedBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Ref ID",
+    header: () => <span className="font-bold text-black">Ref ID</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -661,7 +636,7 @@ const combinedColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "source",
-    header: "Source",
+    header: () => <span className="font-bold text-black">Source</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -710,14 +685,14 @@ const combinedColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "contact",
-    header: "Contact",
+    header: () => <span className="font-bold text-black">Contact</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground font-mono text-sm">
         {row.getValue("contact")}
@@ -726,15 +701,15 @@ const combinedColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup",
+    header: () => <span className="font-bold text-black">Pickup</span>,
   },
   {
     accessorKey: "drop",
-    header: "Drop",
+    header: () => <span className="font-bold text-black">Drop</span>,
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle",
+    header: () => <span className="font-bold text-black">Vehicle</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -751,7 +726,7 @@ const combinedColumns: ColumnDef<UnifiedBooking>[] = [
   },
   {
     accessorKey: "dateTime",
-    header: "Date/Time",
+    header: () => <span className="font-bold text-black">Date/Time</span>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.getValue("dateTime")}
@@ -760,53 +735,37 @@ const combinedColumns: ColumnDef<UnifiedBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// FILTER STATE TYPE
-// ═══════════════════════════════════════════════════════════════════════════
 type SourceFilter = "all" | "Portal" | "App";
 type VehicleFilter = "all" | "Tuk" | "nonTuk";
 
-// Determine which column set to use based on filters
 const getColumnSet = (
   sourceFilter: SourceFilter,
   vehicleFilter: VehicleFilter
 ): "manual" | "app" | "combined" => {
-  // If source is specifically Portal/Manual
   if (sourceFilter === "Portal") {
     return "manual";
   }
-
-  // If source is specifically App
   if (sourceFilter === "App") {
     return "app";
   }
-
-  // If source is "all" (both), show combined/intersection columns
   return "combined";
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
 export default function UnifiedPendingReports() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [vehicleFilter, setVehicleFilter] = useState<VehicleFilter>("all");
 
-  // All data combined
   const allBookingsData = useMemo(() => allData, []);
 
-  // Filter data based on source and vehicle filters
   const filteredData = useMemo(() => {
     let result = [...allBookingsData];
 
-    // Filter by source
     if (sourceFilter === "Portal") {
       result = result.filter((item) => item.source === "Portal");
     } else if (sourceFilter === "App") {
       result = result.filter((item) => item.source === "App");
     }
 
-    // Filter by vehicle
     if (vehicleFilter === "Tuk") {
       result = result.filter((item) => item.vehicle === "Tuk");
     } else if (vehicleFilter === "nonTuk") {
@@ -816,7 +775,6 @@ export default function UnifiedPendingReports() {
     return result;
   }, [allBookingsData, sourceFilter, vehicleFilter]);
 
-  // Stats calculation
   const stats = useMemo(() => {
     const all = allBookingsData;
     const portal = all.filter((d) => d.source === "Portal");
@@ -840,7 +798,6 @@ export default function UnifiedPendingReports() {
     };
   }, [allBookingsData, filteredData]);
 
-  // Get columns based on current filter state
   const currentColumns = useMemo(() => {
     const columnSet = getColumnSet(sourceFilter, vehicleFilter);
 
@@ -854,11 +811,9 @@ export default function UnifiedPendingReports() {
     }
   }, [sourceFilter, vehicleFilter]);
 
-  // Get dynamic filters for the table
   const tableFilters = useMemo(() => {
     const filters = [];
 
-    // Source filter (only in combined view)
     if (sourceFilter === "all") {
       filters.push({
         key: "source",
@@ -870,7 +825,6 @@ export default function UnifiedPendingReports() {
       });
     }
 
-    // Vehicle filter
     const vehicleOptions = [
       { value: "Bus", label: "Bus" },
       { value: "Luxury", label: "Luxury" },
@@ -885,7 +839,6 @@ export default function UnifiedPendingReports() {
       options: vehicleOptions,
     });
 
-    // Platform filter (only for App view)
     if (sourceFilter === "App") {
       filters.push({
         key: "platform",
@@ -900,7 +853,6 @@ export default function UnifiedPendingReports() {
     return filters;
   }, [sourceFilter]);
 
-  // Get title based on filters
   const getTitle = () => {
     if (sourceFilter === "Portal" && vehicleFilter === "Tuk") {
       return "Tuk Pending (Manual)";
@@ -929,7 +881,6 @@ export default function UnifiedPendingReports() {
     return "All Pending Bookings";
   };
 
-  // Get subtitle
   const getSubtitle = () => {
     const parts = [];
     if (sourceFilter === "all") parts.push("All Sources");
@@ -943,19 +894,46 @@ export default function UnifiedPendingReports() {
     return `${parts.join(" • ")} • ${stats.filtered} records`;
   };
 
-  // PDF Export
-  const exportPDF = () => {
+  // --- PDF & Print Logic ---
+  const generateReport = async (action: "save" | "print") => {
     const doc = new jsPDF({ orientation: "landscape" });
 
-    doc.setFontSize(20);
-    doc.setTextColor(99, 48, 184);
-    doc.text("Pending Booking Report", 14, 22);
+    // 1. Add Logo
+    try {
+      const logoData = await getBase64ImageFromURL("/logo.png");
+      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
+    } catch (e) {
+      console.error("Logo missing", e);
+    }
 
-    doc.setFontSize(11);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
-    doc.text(`View: ${getTitle()}`, 14, 36);
-    doc.text(`Total Records: ${filteredData.length}`, 14, 42);
+    // 2. Main Title
+    doc.setFontSize(22);
+    doc.setTextColor(99, 48, 184); // Purple
+    doc.text("Pending Bookings Audit Report", 40, 22);
+
+    // 3. Metadata
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 28);
+
+    // 4. --- APPLIED FILTERS SECTION ---
+    doc.setDrawColor(200);
+    doc.line(14, 35, 283, 35);
+
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applied Report Filters:", 14, 42);
+
+    doc.setFont("helvetica", "normal");
+    const sourceText = sourceFilter === "all" ? "All Sources" : sourceFilter === "Portal" ? "Manual/Portal" : "App";
+    const vehicleText = vehicleFilter === "all" ? "All Vehicles" : vehicleFilter === "Tuk" ? "Tuk Only" : "Cars/Buses Only";
+    
+    doc.text(`Booking Source: ${sourceText}`, 14, 48);
+    doc.text(`Vehicle Category: ${vehicleText}`, 14, 53);
+    doc.text(`Total Records in Database: ${allBookingsData.length}`, 14, 58);
+    doc.text(`Filtered Records: ${filteredData.length}`, 14, 63);
+    doc.text(`Portal: ${stats.portal} | App: ${stats.app} | Tuk: ${stats.tuk} | Non-Tuk: ${stats.nonTuk}`, 14, 68);
 
     let tableColumn: string[];
     let tableRows: string[][];
@@ -1051,25 +1029,22 @@ export default function UnifiedPendingReports() {
         });
     }
 
+    // 5. Table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 48,
-      headStyles: {
-        fillColor: [99, 48, 184],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 250],
-      },
-      styles: {
-        fontSize: 7,
-        cellPadding: 2,
-      },
+      startY: 75,
+      headStyles: { fillColor: [99, 48, 184], textColor: [255, 255, 255] },
+      styles: { fontSize: 8 },
+      margin: { left: 14, right: 14 },
     });
 
-    doc.save(`pending_report_${sourceFilter}_${vehicleFilter}.pdf`);
+    if (action === "save") {
+      doc.save(`PendingReport_${sourceFilter}_${vehicleFilter}_${new Date().getTime()}.pdf`);
+    } else {
+      doc.autoPrint();
+      window.open(doc.output("bloburl"), "_blank");
+    }
   };
 
   // CSV Export
@@ -1097,19 +1072,19 @@ export default function UnifiedPendingReports() {
           "Vehicle Class",
         ];
         rows = filteredData.map((row) => [
-          row.refNumber,
-          row.isAdvance || "No",
-          row.organization || "Individual",
-          `"${row.customer}"`,
-          row.contact,
-          row.hireType || "N/A",
-          `"${row.clientRemarks || ""}"`,
-          row.bookingTime || "N/A",
-          row.bookedBy || "N/A",
-          row.pickupTime || "N/A",
-          `"${row.pickup}"`,
-          `"${row.drop}"`,
-          row.vehicle,
+          String(row.refNumber),
+          String(row.isAdvance || "No"),
+          String(row.organization || "Individual"),
+          String(row.customer),
+          String(row.contact),
+          String(row.hireType || "N/A"),
+          String(row.clientRemarks || ""),
+          String(row.bookingTime || "N/A"),
+          String(row.bookedBy || "N/A"),
+          String(row.pickupTime || "N/A"),
+          String(row.pickup),
+          String(row.drop),
+          String(row.vehicle),
         ]);
         break;
       case "app":
@@ -1124,14 +1099,14 @@ export default function UnifiedPendingReports() {
           "Platform",
         ];
         rows = filteredData.map((row) => [
-          row.refNumber,
-          `"${row.customer}"`,
-          row.contact,
-          `"${row.pickup}"`,
-          `"${row.drop}"`,
-          row.vehicle,
-          row.dateTime,
-          row.platform || "N/A",
+          String(row.refNumber),
+          String(row.customer),
+          String(row.contact),
+          String(row.pickup),
+          String(row.drop),
+          String(row.vehicle),
+          String(row.dateTime),
+          String(row.platform || "N/A"),
         ]);
         break;
       default:
@@ -1156,38 +1131,26 @@ export default function UnifiedPendingReports() {
               ? "Tuk (Manual)"
               : "Manual/Portal";
           return [
-            row.refNumber,
-            sourceLabel,
-            `"${row.customer}"`,
-            row.contact,
-            `"${row.pickup}"`,
-            `"${row.drop}"`,
-            row.vehicle,
-            row.dateTime,
+            String(row.refNumber),
+            String(sourceLabel),
+            String(row.customer),
+            String(row.contact),
+            String(row.pickup),
+            String(row.drop),
+            String(row.vehicle),
+            String(row.dateTime),
           ];
         });
     }
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((r) => r.join(",")),
-    ].join("\n");
-
+    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `pending_report_${sourceFilter}_${vehicleFilter}.csv`
-    );
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `PendingReport_${sourceFilter}_${vehicleFilter}_${new Date().getTime()}.csv`;
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
-  // Reset all filters
   const resetFilters = () => {
     setSourceFilter("all");
     setVehicleFilter("all");
@@ -1198,11 +1161,12 @@ export default function UnifiedPendingReports() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#6330B8]">
+          <h1 className="text-3xl font-bold text-purple-700">
             Pending Bookings Report
           </h1>
           <p className="text-muted-foreground mt-1">
-            Summary and report view of all pending bookings
+            Viewing {filteredData.length} records
+            {(sourceFilter !== "all" || vehicleFilter !== "all") && " (filtered)"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -1211,13 +1175,20 @@ export default function UnifiedPendingReports() {
             className="border-green-600 text-green-700 hover:bg-green-50"
             onClick={exportCSV}
           >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
+            <FileSpreadsheet className="mr-2 h-4 w-4" /> CSV
           </Button>
           <Button
-            className="bg-[#6330B8] hover:bg-[#6330B8]/90"
-            onClick={exportPDF}
+            variant="outline"
+            onClick={() => generateReport("print")}
+            className="border-purple-600 text-purple-700 hover:bg-purple-50"
           >
-            <FileText className="mr-2 h-4 w-4" /> Export PDF
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={() => generateReport("save")}
+          >
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
           </Button>
         </div>
       </div>
@@ -1228,11 +1199,10 @@ export default function UnifiedPendingReports() {
           Filter by Source
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
-          {/* All Sources */}
           <Card
             className={`cursor-pointer transition-all ${
               sourceFilter === "all"
-                ? "ring-2 ring-[#6330B8] bg-purple-50/50 border-[#6330B8]"
+                ? "ring-2 ring-purple-600 bg-purple-50/50 border-purple-600"
                 : "hover:bg-purple-50/30"
             }`}
             onClick={() => setSourceFilter("all")}
@@ -1242,7 +1212,7 @@ export default function UnifiedPendingReports() {
               <Layers
                 className={`h-4 w-4 ${
                   sourceFilter === "all"
-                    ? "text-[#6330B8]"
+                    ? "text-purple-600"
                     : "text-muted-foreground"
                 }`}
               />
@@ -1255,7 +1225,6 @@ export default function UnifiedPendingReports() {
             </CardContent>
           </Card>
 
-          {/* Manual/Portal */}
           <Card
             className={`cursor-pointer transition-all ${
               sourceFilter === "Portal"
@@ -1284,7 +1253,6 @@ export default function UnifiedPendingReports() {
             </CardContent>
           </Card>
 
-          {/* App */}
           <Card
             className={`cursor-pointer transition-all ${
               sourceFilter === "App"
@@ -1319,7 +1287,6 @@ export default function UnifiedPendingReports() {
           Filter by Vehicle Type
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
-          {/* All Vehicles */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "all"
@@ -1348,7 +1315,6 @@ export default function UnifiedPendingReports() {
             </CardContent>
           </Card>
 
-          {/* Tuk Only */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "Tuk"
@@ -1375,7 +1341,6 @@ export default function UnifiedPendingReports() {
             </CardContent>
           </Card>
 
-          {/* Non-Tuk */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "nonTuk"
@@ -1434,7 +1399,7 @@ export default function UnifiedPendingReports() {
               : "Non-Tuk"}
           </Badge>
           <span className="text-muted-foreground">=</span>
-          <Badge className="bg-[#6330B8]">{stats.filtered} records</Badge>
+          <Badge className="bg-purple-600">{stats.filtered} records</Badge>
         </div>
         {(sourceFilter !== "all" || vehicleFilter !== "all") && (
           <Button variant="ghost" size="sm" onClick={resetFilters}>
@@ -1445,15 +1410,14 @@ export default function UnifiedPendingReports() {
 
       {/* Table Card */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 border-b">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <CardTitle>{getTitle()}</CardTitle>
+              <CardTitle className="text-lg">{getTitle()}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 {getSubtitle()}
               </p>
             </div>
-            {/* Column set indicator */}
             <Badge variant="outline" className="self-start">
               {getColumnSet(sourceFilter, vehicleFilter) === "manual"
                 ? "13 Columns (Manual Format)"
@@ -1463,16 +1427,13 @@ export default function UnifiedPendingReports() {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          {/* Key forces re-render when filters change */}
+        <CardContent className="pt-4">
           <EnhancedDataTable
             key={`${sourceFilter}-${vehicleFilter}`}
             columns={currentColumns}
             data={filteredData}
             searchKey="customer"
             searchPlaceholder="Search by customer name..."
-            enableColumnVisibility={true}
-            pageSize={10}
             filters={tableFilters}
           />
         </CardContent>

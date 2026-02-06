@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
@@ -14,6 +15,10 @@ import {
   Activity,
   Wifi,
   WifiOff,
+  Printer,
+  Filter,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,10 +35,29 @@ export type DriverActivity = {
   vehicleModel: string;
   lastLocation: string;
   totalOnlineDuration: string;
-  // Computed fields
   searchField: string;
   onlineStatus: "Online" | "Offline";
-  durationMinutes: number; // For sorting/stats
+  durationMinutes: number;
+};
+
+// --- Helper for Logo ---
+const getBase64ImageFromURL = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute("crossOrigin", "anonymous");
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = (error) => reject(error);
+    img.src = url;
+  });
 };
 
 // --- Mock Data ---
@@ -163,7 +187,7 @@ const rawActivityData = [
 // Transform data - add searchField for combined search
 const allActivityData: DriverActivity[] = rawActivityData.map((driver) => ({
   ...driver,
-  searchField: `${driver.code} ${driver.firstName}`,
+  searchField: `${driver.code} ${driver.firstName} ${driver.vehicleCode}`,
   onlineStatus: driver.onlineStatus as "Online" | "Offline",
 }));
 
@@ -204,7 +228,7 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "code",
-    header: "Code",
+    header: () => <span className="font-bold text-black">Code</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <div className={`h-2 w-2 rounded-full ${row.original.onlineStatus === "Online" ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
@@ -216,7 +240,7 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "firstName",
-    header: "First Name",
+    header: () => <span className="font-bold text-black">First Name</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
@@ -230,7 +254,7 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "contactNumber",
-    header: "Contact Number",
+    header: () => <span className="font-bold text-black">Contact Number</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Phone className="h-3 w-3 text-green-600" />
@@ -240,7 +264,7 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "vehicleCode",
-    header: "Vehicle Code",
+    header: () => <span className="font-bold text-black">Vehicle Code</span>,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
@@ -253,14 +277,14 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "vehicleModel",
-    header: "Vehicle Model",
+    header: () => <span className="font-bold text-black">Vehicle Model</span>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">{row.getValue("vehicleModel")}</span>
     ),
   },
   {
     accessorKey: "lastLocation",
-    header: "Last Location",
+    header: () => <span className="font-bold text-black">Last Location</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-blue-500" />
@@ -270,7 +294,7 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "totalOnlineDuration",
-    header: "Total Online Duration",
+    header: () => <span className="font-bold text-black">Total Online Duration</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Clock className="h-3 w-3 text-orange-500" />
@@ -282,7 +306,7 @@ const columns: ColumnDef<DriverActivity>[] = [
   },
   {
     accessorKey: "onlineStatus",
-    header: "Status",
+    header: () => <span className="font-bold text-black">Status</span>,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
@@ -330,47 +354,60 @@ export default function DriverActivityLog() {
       online: allActivityData.filter((d) => d.onlineStatus === "Online").length,
       offline: allActivityData.filter((d) => d.onlineStatus === "Offline").length,
       totalDuration: `${hours}h ${minutes}m`,
-      avgDuration: filteredData.length > 0 
+      avgDuration: filteredData.length > 0
         ? `${Math.floor(totalMinutes / filteredData.length / 60)}h ${Math.floor((totalMinutes / filteredData.length) % 60)}m`
         : "0h 0m",
     };
   }, [filteredData]);
 
-  // Table filters
-  const tableFilters = useMemo(
-    () => [
-      {
-        key: "onlineStatus",
-        label: "Status",
-        options: [
-          { value: "Online", label: "Online" },
-          { value: "Offline", label: "Offline" },
-        ],
-      },
-    ],
-    []
-  );
-
-  // --- Export Functions ---
-  const exportPDF = () => {
+  // --- PDF & Print Logic ---
+  const generateReport = async (action: "save" | "print") => {
     const doc = new jsPDF({ orientation: "landscape" });
 
-    // Header
-    doc.setFontSize(18);
-    doc.setTextColor(99, 48, 184);
-    doc.text("Driver Activity Log", 14, 15);
+    // 1. Add Logo
+    try {
+      const logoData = await getBase64ImageFromURL("/logo.png");
+      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
+    } catch (e) {
+      console.error("Logo missing", e);
+    }
+
+    // 2. Main Title
+    doc.setFontSize(22);
+    doc.setTextColor(99, 48, 184); // Purple
+    doc.text("Driver Activity Log Audit Report", 40, 22);
+
+    // 3. Metadata
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 28);
+
+    // 4. --- APPLIED FILTERS SECTION ---
+    doc.setDrawColor(200);
+    doc.line(14, 35, 283, 35); // Horizontal line
 
     doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(
-      `Generated: ${new Date().toLocaleDateString()} | Total: ${filteredData.length} drivers | Online: ${stats.online}`,
-      14,
-      22
-    );
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applied Report Filters:", 14, 42);
 
-    // Table
+    doc.setFont("helvetica", "normal");
+    const statusText =
+      statusFilter === "all"
+        ? "All Drivers"
+        : statusFilter === "online"
+        ? "Online Only"
+        : "Offline Only";
+
+    doc.text(`Status Filter: ${statusText}`, 14, 48);
+    doc.text(`Total Records in Database: ${allActivityData.length}`, 14, 53);
+    doc.text(`Filtered Records: ${filteredData.length}`, 14, 58);
+    doc.text(`Online Drivers: ${stats.online} | Offline Drivers: ${stats.offline}`, 14, 63);
+    doc.text(`Average Online Duration: ${stats.avgDuration}`, 14, 68);
+
+    // 5. Table
     autoTable(doc, {
-      head: [["Code", "First Name", "Contact", "Vehicle Code", "Vehicle Model", "Last Location", "Online Duration"]],
+      head: [["Code", "First Name", "Contact", "Vehicle Code", "Vehicle Model", "Last Location", "Online Duration", "Status"]],
       body: filteredData.map((d) => [
         d.code,
         d.firstName,
@@ -379,38 +416,49 @@ export default function DriverActivityLog() {
         d.vehicleModel,
         d.lastLocation,
         d.totalOnlineDuration,
+        d.onlineStatus,
       ]),
-      startY: 28,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [99, 48, 184] },
+      startY: 75,
+      headStyles: { fillColor: [99, 48, 184], textColor: [255, 255, 255] },
+      styles: { fontSize: 8 },
+      margin: { left: 14, right: 14 },
     });
 
-    doc.save("driver_activity_log.pdf");
+    if (action === "save") {
+      doc.save(`DriverActivityLog_${statusFilter}_${new Date().getTime()}.pdf`);
+    } else {
+      doc.autoPrint();
+      window.open(doc.output("bloburl"), "_blank");
+    }
   };
 
+  // --- Export CSV ---
   const exportCSV = () => {
-    const headers = "Code,First Name,Contact Number,Vehicle Code,Vehicle Model,Last Location,Total Online Duration,Status";
-    const rows = filteredData.map(
-      (d) =>
-        `${d.code},${d.firstName},${d.contactNumber},${d.vehicleCode},${d.vehicleModel},${d.lastLocation},${d.totalOnlineDuration},${d.onlineStatus}`
+    const headers = ["Code", "First Name", "Contact Number", "Vehicle Code", "Vehicle Model", "Last Location", "Total Online Duration", "Status"];
+    const rows = filteredData.map((d) =>
+      [d.code, d.firstName, d.contactNumber, d.vehicleCode, d.vehicleModel, d.lastLocation, d.totalOnlineDuration, d.onlineStatus]
+        .map((cell) => `"${cell}"`)
+        .join(",")
     );
-    const csv = [headers, ...rows].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "driver_activity_log.csv";
+    link.download = `DriverActivityLog_${statusFilter}_${new Date().getTime()}.csv`;
     link.click();
   };
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
-      
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#6330B8]">Driver Activity Log</h1>
-          <p className="text-muted-foreground mt-1">Monitor driver online status and activity duration</p>
+          <h1 className="text-3xl font-bold text-purple-700">Driver Activity Log</h1>
+          <p className="text-muted-foreground mt-1">
+            Viewing {filteredData.length} records
+            {statusFilter !== "all" && ` (filtered by ${statusFilter})`}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -418,10 +466,17 @@ export default function DriverActivityLog() {
             onClick={exportCSV}
             className="border-green-600 text-green-700 hover:bg-green-50"
           >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
+            <FileSpreadsheet className="mr-2 h-4 w-4" /> CSV
           </Button>
-          <Button className="bg-[#6330B8] hover:bg-[#6330B8]/90" onClick={exportPDF}>
-            <FileText className="mr-2 h-4 w-4" /> Export PDF
+          <Button
+            variant="outline"
+            onClick={() => generateReport("print")}
+            className="border-purple-600 text-purple-700 hover:bg-purple-50"
+          >
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => generateReport("save")}>
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
           </Button>
         </div>
       </div>
@@ -430,13 +485,13 @@ export default function DriverActivityLog() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card
           className={`cursor-pointer transition-all hover:shadow-md ${
-            statusFilter === "all" ? "ring-2 ring-[#6330B8] bg-purple-50/50" : ""
+            statusFilter === "all" ? "ring-2 ring-purple-600 bg-purple-50/50" : ""
           }`}
           onClick={() => setStatusFilter("all")}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Drivers</CardTitle>
-            <Users className="h-4 w-4 text-[#6330B8]" />
+            <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -488,11 +543,42 @@ export default function DriverActivityLog() {
         </Card>
       </div>
 
+      {/* Filter Buttons */}
+      <div className="flex flex-wrap gap-2">
+        <span className="text-sm font-medium text-gray-600 flex items-center mr-2">
+          <Filter className="h-4 w-4 mr-1" /> Quick Filter:
+        </span>
+        <Button
+          variant={statusFilter === "all" ? "default" : "outline"}
+          onClick={() => setStatusFilter("all")}
+          className={statusFilter === "all" ? "bg-purple-600" : ""}
+          size="sm"
+        >
+          <Users className="mr-2 h-4 w-4" /> All Drivers
+        </Button>
+        <Button
+          variant={statusFilter === "online" ? "default" : "outline"}
+          onClick={() => setStatusFilter("online")}
+          className={statusFilter === "online" ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+          size="sm"
+        >
+          <CheckCircle className="mr-2 h-4 w-4" /> Online Only
+        </Button>
+        <Button
+          variant={statusFilter === "offline" ? "default" : "outline"}
+          onClick={() => setStatusFilter("offline")}
+          className={statusFilter === "offline" ? "bg-gray-600 hover:bg-gray-700 text-white" : ""}
+          size="sm"
+        >
+          <XCircle className="mr-2 h-4 w-4" /> Offline Only
+        </Button>
+      </div>
+
       {/* Data Table Card */}
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between border-b">
-          <CardTitle className="flex items-center gap-2 text-[#6330B8]">
-            <Activity className="h-5 w-5" />
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Activity className="h-5 w-5 text-purple-600" />
             Activity Logs
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -510,10 +596,7 @@ export default function DriverActivityLog() {
             columns={columns}
             data={filteredData}
             searchKey="searchField"
-            searchPlaceholder="Search by name or code..."
-            enableColumnVisibility={true}
-            pageSize={10}
-            filters={tableFilters}
+            searchPlaceholder="Search by name, code, or vehicle..."
           />
         </CardContent>
       </Card>

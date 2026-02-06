@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
@@ -5,15 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   FileText,
-  FileSpreadsheet,
+  FileSpreadsheet, // For CSV icon
   Layers,
   Car,
   Ban,
-  Clock,
-  XCircle,
-  User,
-  ShieldAlert,
   Headset,
+  Printer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,95 +33,43 @@ export type CancelledBooking = {
   cancelledAgent: string;
   driver: string;
   vehicle: string;
-  vehicleType: string; // Used for Logic/Filtering
+  vehicleType: string;
+};
+
+// --- Helper to convert your public/logo.png to Base64 for jsPDF ---
+const getBase64ImageFromURL = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute("crossOrigin", "anonymous");
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL("image/png");
+        resolve(dataURL);
+      }
+    };
+    img.onerror = (error) => reject(error);
+    img.src = url;
+  });
 };
 
 // --- Mock Data ---
 const rawCancelledData = [
-  {
-    id: "c1",
-    bookingNumber: "295001",
-    org: "Alpha Corp",
-    customer: "Ms. Shiromi",
-    passenger: "0771234567",
-    hireType: "Corporate",
-    bookingTime: "10:00 AM",
-    testBooking: "No",
-    cancelledTime: "10:15 AM",
-    cancelledType: "Customer",
-    cancelledAgent: "Web App",
-    driver: "Sunil Silva",
-    vehicle: "CAB-1234",
-    vehicleClass: "Bus",
-  },
-  {
-    id: "c2",
-    bookingNumber: "295005",
-    org: "Personal",
-    customer: "John Silva",
-    passenger: "0719876543",
-    hireType: "Budget",
-    bookingTime: "11:30 AM",
-    testBooking: "No",
-    cancelledTime: "11:40 AM",
-    cancelledType: "Driver",
-    cancelledAgent: "Driver App",
-    driver: "Nimal Fernando",
-    vehicle: "ECO-5678",
-    vehicleClass: "ECONOMY",
-  },
-  {
-    id: "ct1",
-    bookingNumber: "TUK-C001",
-    org: "Personal",
-    customer: "Kamal Perera",
-    passenger: "0784447788",
-    hireType: "Tuk-Hire",
-    bookingTime: "09:00 AM",
-    testBooking: "No",
-    cancelledTime: "09:05 AM",
-    cancelledType: "System",
-    cancelledAgent: "Auto-Cancel",
-    driver: "Saman Tuk",
-    vehicle: "TUK-111",
-    vehicleType: "Tuk",
-  },
+  { id: "c1", bookingNumber: "295001", org: "Alpha Corp", customer: "Ms. Shiromi", passenger: "0771234567", hireType: "Corporate", bookingTime: "10:00 AM", testBooking: "No", cancelledTime: "10:15 AM", cancelledType: "Customer", cancelledAgent: "Web App", driver: "Sunil Silva", vehicle: "CAB-1234", vehicleClass: "Bus" },
+  { id: "c2", bookingNumber: "295005", org: "Personal", customer: "John Silva", passenger: "0719876543", hireType: "Budget", bookingTime: "11:30 AM", testBooking: "No", cancelledTime: "11:40 AM", cancelledType: "Driver", cancelledAgent: "Driver App", driver: "Nimal Fernando", vehicle: "ECO-5678", vehicleClass: "ECONOMY" },
+  { id: "ct1", bookingNumber: "TUK-C001", org: "Personal", customer: "Kamal Perera", passenger: "0784447788", hireType: "Tuk-Hire", bookingTime: "09:00 AM", testBooking: "No", cancelledTime: "09:05 AM", cancelledType: "System", cancelledAgent: "Auto-Cancel", driver: "Saman Tuk", vehicle: "TUK-111", vehicleType: "Tuk" },
 ];
 
-// Core logic: Transform data
-const regularCancelled = rawCancelledData
-  .filter((item) => !item.vehicleType)
-  .map((item) => ({
-    ...item,
-    vehicleType: item.vehicleClass || "Standard",
-  }));
+const allCancelledData = rawCancelledData.map(item => ({
+  ...item,
+  vehicleType: item.vehicleType || (item as any).vehicleClass || "Standard"
+})) as CancelledBooking[];
 
-const tukCancelled = rawCancelledData.filter((item) => item.vehicleType === "Tuk");
-
-const allCancelledData = [...regularCancelled, ...tukCancelled] as CancelledBooking[];
-
-// Helpers
-const getVehicleBadgeClass = (type: string) => {
-  const map: Record<string, string> = {
-    Tuk: "bg-yellow-100 text-yellow-800",
-    Bus: "bg-orange-100 text-orange-800",
-    ECONOMY: "bg-green-100 text-green-800",
-    Standard: "bg-blue-100 text-blue-800",
-  };
-  return map[type] || "bg-gray-100 text-gray-800";
-};
-
-const getCancelTypeBadge = (type: string) => {
-  const map: Record<string, string> = {
-    Customer: "bg-blue-100 text-blue-800",
-    Driver: "bg-red-100 text-red-800",
-    System: "bg-gray-100 text-gray-800",
-    "No Show": "bg-orange-100 text-orange-800",
-  };
-  return map[type] || "bg-gray-100 text-gray-800";
-};
-
-// --- Column Definitions (Exactly as requested) ---
+// --- Column Definitions ---
 const columns: ColumnDef<CancelledBooking>[] = [
   {
     id: "select",
@@ -135,60 +81,24 @@ const columns: ColumnDef<CancelledBooking>[] = [
     ),
     cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} />,
   },
-  { accessorKey: "bookingNumber", header: "Booking #" },
-  { accessorKey: "org", header: "Org" },
-  { accessorKey: "customer", header: "Customer" },
-  { accessorKey: "passenger", header: "Passenger #" },
-  { accessorKey: "hireType", header: "Hire Type" },
-  { accessorKey: "bookingTime", header: "Booking Time" },
-  { 
-    accessorKey: "testBooking", 
-    header: "Test Booking",
-    cell: ({ row }) => (
-        <Badge variant={row.getValue("testBooking") === "Yes" ? "destructive" : "outline"}>
-            {row.getValue("testBooking")}
-        </Badge>
-    )
+  { accessorKey: "bookingNumber", header: () => <span className="font-bold text-black">Booking #</span> },
+  { accessorKey: "org", header: () => <span className="font-bold text-black">Org</span> },
+  { accessorKey: "customer", header: () => <span className="font-bold text-black">Customer</span> },
+  { accessorKey: "passenger", header: () => <span className="font-bold text-black">Passenger #</span> },
+  { accessorKey: "hireType", header: () => <span className="font-bold text-black">Hire Type</span> },
+  { accessorKey: "bookingTime", header: () => <span className="font-bold text-black">Booking Time</span> },
+  { accessorKey: "cancelledTime", header: () => <span className="font-bold text-black">Cancelled At</span> },
+  {
+    accessorKey: "cancelledType",
+    header: () => <span className="font-bold text-black">Type</span>,
+    cell: ({ row }) => <Badge variant="secondary">{row.getValue("cancelledType")}</Badge>
   },
-  { accessorKey: "cancelledTime", header: "Cancelled Time" },
-  { 
-    accessorKey: "cancelledType", 
-    header: "Cancelled Type",
-    cell: ({ row }) => (
-        <Badge className={getCancelTypeBadge(row.getValue("cancelledType"))}>
-            {row.getValue("cancelledType")}
-        </Badge>
-    )
-  },
-  { 
-    accessorKey: "cancelledAgent", 
-    header: "Cancelled Agent",
-    cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-            <Headset className="h-3 w-3 text-muted-foreground" />
-            <span>{row.getValue("cancelledAgent")}</span>
-        </div>
-    )
-  },
-  { accessorKey: "driver", header: "Driver" },
-  { 
-    accessorKey: "vehicle", 
-    header: "Vehicle",
-    cell: ({ row }) => (
-      <div className="flex flex-col gap-1">
-        <span className="font-mono text-xs">{row.getValue("vehicle")}</span>
-        <Badge className={`${getVehicleBadgeClass(row.original.vehicleType)} text-[10px]`}>
-          {row.original.vehicleType}
-        </Badge>
-      </div>
-    )
-  },
+  { accessorKey: "driver", header: () => <span className="font-bold text-black">Driver</span> },
+  { accessorKey: "vehicle", header: () => <span className="font-bold text-black">Vehicle</span> },
 ];
 
-type VehicleFilter = "all" | "Tuk" | "nonTuk";
-
 export default function CancelledHiresReport() {
-  const [vehicleFilter, setVehicleFilter] = useState<VehicleFilter>("all");
+  const [vehicleFilter, setVehicleFilter] = useState<"all" | "Tuk" | "nonTuk">("all");
 
   const filteredData = useMemo(() => {
     let result = [...allCancelledData];
@@ -197,127 +107,152 @@ export default function CancelledHiresReport() {
     return result;
   }, [vehicleFilter]);
 
-  const stats = useMemo(() => ({
-    total: allCancelledData.length,
-    tuk: allCancelledData.filter(d => d.vehicleType === "Tuk").length,
-    nonTuk: allCancelledData.filter(d => d.vehicleType !== "Tuk").length,
-    customerCancel: filteredData.filter(d => d.cancelledType === "Customer").length,
-    driverCancel: filteredData.filter(d => d.cancelledType === "Driver").length,
-  }), [filteredData]);
-
-  const tableFilters = useMemo(() => [{
-    key: "vehicleType",
-    label: "Vehicle Class",
-    options: [
-      { value: "Bus", label: "Bus" },
-      { value: "Standard", label: "Standard" },
-      { value: "ECONOMY", label: "Economy" },
-      { value: "Tuk", label: "Tuk" },
-    ],
-  }], []);
-
-  const exportPDF = () => {
+  // --- PDF & Print Logic with Image ---
+  const generateReport = async (action: 'save' | 'print') => {
     const doc = new jsPDF({ orientation: "landscape" });
-    doc.text("Cancelled Hires Report", 14, 15);
+
+    try {
+      // Path: public/logo.png
+      const logoData = await getBase64ImageFromURL("/logo.png");
+      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
+    } catch (error) {
+      console.error("Logo failed to load", error);
+    }
+
+    doc.setFontSize(20);
+    doc.setTextColor(99, 48, 184);
+    doc.text("Cancelled Hires Audit Report", 40, 20);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 26);
+
+    // --- APPLIED FILTERS SECTION ---
+    doc.setDrawColor(200);
+    doc.line(14, 32, 283, 32);
+
+    doc.setFontSize(9);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applied Report Filters:", 14, 38);
+
+    doc.setFont("helvetica", "normal");
+    const vehicleText = vehicleFilter === "all" ? "All Vehicles" : vehicleFilter === "Tuk" ? "Tuk Only" : "Cars/Buses Only";
+    doc.text(`Vehicle Category: ${vehicleText}`, 14, 43);
+    doc.text(`Total Records in Database: ${allCancelledData.length}`, 14, 48);
+    doc.text(`Filtered Records: ${filteredData.length}`, 14, 53);
+
     autoTable(doc, {
-      head: [["Booking #", "Customer", "Time", "Type", "Agent", "Driver", "Vehicle"]],
-      body: filteredData.map(d => [d.bookingNumber, d.customer, d.cancelledTime, d.cancelledType, d.cancelledAgent, d.driver, d.vehicle]),
-      startY: 25,
+      head: [["Booking #", "Org", "Customer", "Cancelled Type", "Driver", "Vehicle", "Hire Type"]],
+      body: filteredData.map(d => [d.bookingNumber, d.org, d.customer, d.cancelledType, d.driver, d.vehicle, d.hireType]),
+      startY: 59,
+      headStyles: { fillColor: [99, 48, 184], textColor: [255, 255, 255] },
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [220, 38, 38] }
+      margin: { left: 14, right: 14 },
     });
-    doc.save("cancelled_hires.pdf");
+
+    if (action === 'save') {
+      doc.save(`CancelledHires_${vehicleFilter}_${new Date().getTime()}.pdf`);
+    } else {
+      doc.autoPrint();
+      window.open(doc.output('bloburl'), '_blank');
+    }
   };
 
+  // --- CSV Export Logic ---
   const exportCSV = () => {
-    const headers = "Booking #,Org,Customer,Passenger #,Hire Type,Booking Time,Test Booking,Cancelled Time,Cancelled Type,Cancelled Agent,Driver,Vehicle";
-    const rows = filteredData.map(d => `${d.bookingNumber},${d.org},${d.customer},${d.passenger},${d.hireType},${d.bookingTime},${d.testBooking},${d.cancelledTime},${d.cancelledType},${d.cancelledAgent},${d.driver},${d.vehicle}`);
-    const csv = [headers, ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const headers = ["Booking #", "Organization", "Customer", "Passenger #", "Hire Type", "Booking Time", "Cancelled At", "Cancellation Type", "Cancelled Agent", "Driver", "Vehicle", "Vehicle Type", "Test Booking"];
+
+    const csvRows = filteredData.map(d => [
+      d.bookingNumber,
+      d.org,
+      d.customer,
+      d.passenger,
+      d.hireType,
+      d.bookingTime,
+      d.cancelledTime,
+      d.cancelledType,
+      d.cancelledAgent,
+      d.driver,
+      d.vehicle,
+      d.vehicleType,
+      d.testBooking
+    ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(","));
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "cancelled_hires.csv";
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `CancelledHires_${vehicleFilter}_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
+
+  const tableFilters = useMemo(() => [
+    { key: "vehicleType", label: "Vehicle Class", options: [{ value: "Bus", label: "Bus" }, { value: "Standard", label: "Standard" }, { value: "Tuk", label: "Tuk" }] },
+    { key: "cancelledType", label: "Cancellation Type", options: [{ value: "Customer", label: "Customer" }, { value: "Driver", label: "Driver" }, { value: "System", label: "System" }] },
+  ], []);
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-red-50/20 to-slate-50 min-h-screen">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-red-700">Cancelled Hires</h1>
+          <h1 className="text-3xl font-bold text-[#6330B8]">Cancelled Hires</h1>
           <p className="text-muted-foreground mt-1">Audit and analyze booking cancellations</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportCSV} className="border-red-200 text-red-700 hover:bg-red-50">
+          {/* CSV Button */}
+          <Button variant="outline" onClick={exportCSV} className="border-green-600 text-green-700 hover:bg-green-50">
             <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
           </Button>
-          <Button className="bg-red-600 hover:bg-red-700" onClick={exportPDF}>
-            <FileText className="mr-2 h-4 w-4" /> Export PDF
+
+          {/* Print Button */}
+          <Button variant="outline" onClick={() => generateReport('print')} className="border-[#6330B8] text-[#6330B8] hover:bg-purple-50">
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
+
+          {/* PDF Button */}
+          <Button className="bg-red-600 hover:bg-red-700" onClick={() => generateReport('save')}>
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-red-200 bg-red-50/50">
-          <CardHeader className="pb-2 text-xs font-semibold text-red-700 uppercase">Total Cancelled</CardHeader>
-          <CardContent><div className="text-2xl font-bold">{filteredData.length}</div></CardContent>
-        </Card>
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardHeader className="pb-2 text-xs font-semibold text-blue-700 uppercase">By Customer</CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.customerCancel}</div></CardContent>
-        </Card>
-        <Card className="border-orange-200 bg-orange-50/50">
-          <CardHeader className="pb-2 text-xs font-semibold text-orange-700 uppercase">By Driver</CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.driverCancel}</div></CardContent>
-        </Card>
-      </div>
-
-      {/* Vehicle Filter Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card 
-          className={`cursor-pointer transition-all ${vehicleFilter === "all" ? "ring-2 ring-red-600 bg-red-50/50" : ""}`}
+      {/* Vehicle Quick Filters */}
+      <div className="flex gap-2">
+        <Button
+          variant={vehicleFilter === "all" ? "default" : "outline"}
           onClick={() => setVehicleFilter("all")}
+          className={vehicleFilter === "all" ? "bg-[#6330B8]" : ""}
         >
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">All Vehicles</CardTitle>
-            <Layers className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent>
-        </Card>
-
-        <Card 
-          className={`cursor-pointer transition-all ${vehicleFilter === "Tuk" ? "ring-2 ring-yellow-500 bg-yellow-50/50" : ""}`}
+          <Car className="mr-2 h-4 w-4" /> All Hires
+        </Button>
+        <Button
+          variant={vehicleFilter === "Tuk" ? "default" : "outline"}
           onClick={() => setVehicleFilter("Tuk")}
+          className={vehicleFilter === "Tuk" ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
         >
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Tuk Only</CardTitle>
-            <Car className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.tuk}</div></CardContent>
-        </Card>
-
-        <Card 
-          className={`cursor-pointer transition-all ${vehicleFilter === "nonTuk" ? "ring-2 ring-red-400 bg-red-50/50" : ""}`}
+          <Layers className="mr-2 h-4 w-4" /> Tuk Only
+        </Button>
+        <Button
+          variant={vehicleFilter === "nonTuk" ? "default" : "outline"}
           onClick={() => setVehicleFilter("nonTuk")}
+          className={vehicleFilter === "nonTuk" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
         >
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cars & Buses</CardTitle>
-            <Car className="h-4 w-4 text-red-400" />
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.nonTuk}</div></CardContent>
-        </Card>
+          <Car className="mr-2 h-4 w-4" /> Cars/Buses Only
+        </Button>
       </div>
 
-      {/* Main Table */}
       <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between border-b">
-          <CardTitle className="flex items-center gap-2 text-red-700">
-            <Ban className="h-5 w-5" />
+        <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Ban className="h-5 w-5 text-red-600" />
             Cancellation Logs
           </CardTitle>
-          <Badge variant="outline">12 Data Columns</Badge>
+          <Badge variant="outline">Audit Trail</Badge>
         </CardHeader>
         <CardContent className="pt-4">
           <EnhancedDataTable
@@ -325,9 +260,7 @@ export default function CancelledHiresReport() {
             columns={columns}
             data={filteredData}
             searchKey="customer"
-            searchPlaceholder="Search customer..."
-            enableColumnVisibility={true}
-            pageSize={10}
+            searchPlaceholder="Search by customer..."
             filters={tableFilters}
           />
         </CardContent>

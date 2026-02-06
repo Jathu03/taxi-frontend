@@ -1,3 +1,4 @@
+"use client";
 import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
@@ -13,6 +14,7 @@ import {
   CheckCircle2,
   User,
   Clock,
+  Printer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,18 +36,34 @@ export type DispatchedBooking = {
   dispatchedTime: string;
   driver: string;
   vehicle: string;
-  vehicleType?: string; // Added to distinguish vehicle types
+  vehicleType?: string;
   fareScheme?: string;
   source: "Portal" | "App";
   platform?: "Android" | "iOS";
   status: "Dispatched";
 };
 
-// --- Mock Data ---
+// --- Helper for Logo ---
+const getBase64ImageFromURL = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute("crossOrigin", "anonymous");
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = (error) => reject(error);
+    img.src = url;
+  });
+};
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MANUAL/PORTAL DISPATCHED (Non-Tuk Vehicles)
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Mock Data ---
 const portalDispatchedData = [
   {
     id: "pd1",
@@ -117,9 +135,6 @@ const portalDispatchedData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK DISPATCHED (Manual/Portal + Tuk)
-// ═══════════════════════════════════════════════════════════════════════════
 const tukDispatchedData = [
   {
     id: "td1",
@@ -174,9 +189,6 @@ const tukDispatchedData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// APP DISPATCHED (Non-Tuk Vehicles)
-// ═══════════════════════════════════════════════════════════════════════════
 const appDispatchedData = [
   {
     id: "ad1",
@@ -240,9 +252,6 @@ const appDispatchedData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK APP DISPATCHED (App + Tuk)
-// ═══════════════════════════════════════════════════════════════════════════
 const tukAppDispatchedData = [
   {
     id: "tad1",
@@ -291,11 +300,7 @@ const tukAppDispatchedData = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSFORM DATA TO UNIFIED FORMAT
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Portal Dispatched (Non-Tuk)
+// Transform data
 const portalDispatchedBookings: DispatchedBooking[] = portalDispatchedData.map((item) => ({
   id: item.id,
   refNumber: item.bookingNumber,
@@ -316,7 +321,6 @@ const portalDispatchedBookings: DispatchedBooking[] = portalDispatchedData.map((
   status: "Dispatched" as const,
 }));
 
-// Tuk Dispatched (Manual + Tuk)
 const tukDispatchedBookings: DispatchedBooking[] = tukDispatchedData.map((item) => ({
   id: item.id,
   refNumber: item.bookingNumber,
@@ -337,7 +341,6 @@ const tukDispatchedBookings: DispatchedBooking[] = tukDispatchedData.map((item) 
   status: "Dispatched" as const,
 }));
 
-// App Dispatched (Non-Tuk)
 const appDispatchedBookings: DispatchedBooking[] = appDispatchedData.map((item) => ({
   id: item.id,
   refNumber: item.bookingId,
@@ -356,7 +359,6 @@ const appDispatchedBookings: DispatchedBooking[] = appDispatchedData.map((item) 
   status: "Dispatched" as const,
 }));
 
-// Tuk App Dispatched
 const tukAppDispatchedBookings: DispatchedBooking[] = tukAppDispatchedData.map((item) => ({
   id: item.id,
   refNumber: item.bookingId,
@@ -375,7 +377,6 @@ const tukAppDispatchedBookings: DispatchedBooking[] = tukAppDispatchedData.map((
   status: "Dispatched" as const,
 }));
 
-// Combined data
 const allDispatchedData = [
   ...portalDispatchedBookings,
   ...tukDispatchedBookings,
@@ -383,9 +384,7 @@ const allDispatchedData = [
   ...tukAppDispatchedBookings,
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
+// Helper functions
 const getVehicleBadgeClass = (vehicleType: string) => {
   const colorMap: Record<string, string> = {
     Bus: "bg-orange-100 text-orange-800",
@@ -396,10 +395,6 @@ const getVehicleBadgeClass = (vehicleType: string) => {
   };
   return colorMap[vehicleType] || "bg-gray-100 text-gray-800";
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// COLUMN DEFINITIONS
-// ═══════════════════════════════════════════════════════════════════════════
 
 const selectColumn: ColumnDef<DispatchedBooking> = {
   id: "select",
@@ -424,14 +419,12 @@ const selectColumn: ColumnDef<DispatchedBooking> = {
   enableHiding: false,
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MANUAL/PORTAL DISPATCHED COLUMNS (Non-Tuk)
-// ═══════════════════════════════════════════════════════════════════════════
+// Manual/Portal columns
 const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking",
+    header: () => <span className="font-bold text-black">Booking</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -440,7 +433,7 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "organization",
-    header: "Org",
+    header: () => <span className="font-bold text-black">Org</span>,
     cell: ({ row }) => (
       <span className="font-medium">
         {row.original.organization || (
@@ -451,14 +444,14 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "contact",
-    header: "Passenger",
+    header: () => <span className="font-bold text-black">Passenger</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground font-mono text-sm">
         {row.getValue("contact")}
@@ -467,7 +460,7 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "hireType",
-    header: "Hire Type",
+    header: () => <span className="font-bold text-black">Hire Type</span>,
     cell: ({ row }) => {
       const hireType = row.original.hireType;
       return (
@@ -479,7 +472,7 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "pickupTime",
-    header: "Pickup Time",
+    header: () => <span className="font-bold text-black">Pickup Time</span>,
     cell: ({ row }) => (
       <span className="text-sm font-medium">
         {row.getValue("pickupTime")}
@@ -488,11 +481,11 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup Address",
+    header: () => <span className="font-bold text-black">Pickup Address</span>,
   },
   {
     accessorKey: "bookedBy",
-    header: "Booked By",
+    header: () => <span className="font-bold text-black">Booked By</span>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.bookedBy || "N/A"}
@@ -501,7 +494,7 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "dispatchedBy",
-    header: "Dispatched By",
+    header: () => <span className="font-bold text-black">Dispatched By</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <User className="h-3 w-3 text-muted-foreground" />
@@ -513,7 +506,7 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "dispatchedTime",
-    header: "Dispatched Time",
+    header: () => <span className="font-bold text-black">Dispatched Time</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Clock className="h-3 w-3 text-muted-foreground" />
@@ -525,20 +518,20 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "driver",
-    header: "Driver",
+    header: () => <span className="font-bold text-black">Driver</span>,
     cell: ({ row }) => (
       <span className="font-medium">{row.getValue("driver")}</span>
     ),
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle",
+    header: () => <span className="font-bold text-black">Vehicle</span>,
     cell: ({ row }) => {
       const vehicle = row.getValue("vehicle") as string;
       const vehicleType = row.original.vehicleType;
       return (
         <div className="space-y-1">
-          <span className="font-mono text-sm">{vehicle}</span>
+          <span className="font-mono text-sm font-bold">{vehicle}</span>
           <Badge className={`${getVehicleBadgeClass(vehicleType || "")} text-xs`}>
             {vehicleType}
           </Badge>
@@ -548,7 +541,7 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "fareScheme",
-    header: "Fare Scheme",
+    header: () => <span className="font-bold text-black">Fare Scheme</span>,
     cell: ({ row }) => (
       <Badge variant="outline" className="text-xs">
         {row.original.fareScheme || "Standard"}
@@ -557,14 +550,12 @@ const manualDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TUK MANUAL DISPATCHED COLUMNS
-// ═══════════════════════════════════════════════════════════════════════════
+// Tuk columns
 const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Booking",
+    header: () => <span className="font-bold text-black">Booking</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -573,7 +564,7 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "organization",
-    header: "Org",
+    header: () => <span className="font-bold text-black">Org</span>,
     cell: ({ row }) => (
       <span className="font-medium">
         {row.original.organization || (
@@ -584,14 +575,14 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "contact",
-    header: "Passenger",
+    header: () => <span className="font-bold text-black">Passenger</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground font-mono text-sm">
         {row.getValue("contact")}
@@ -600,7 +591,7 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "hireType",
-    header: "Hire Type",
+    header: () => <span className="font-bold text-black">Hire Type</span>,
     cell: ({ row }) => {
       const hireType = row.original.hireType;
       return (
@@ -612,7 +603,7 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "pickupTime",
-    header: "Pickup Time",
+    header: () => <span className="font-bold text-black">Pickup Time</span>,
     cell: ({ row }) => (
       <span className="text-sm font-medium">
         {row.getValue("pickupTime")}
@@ -621,11 +612,11 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "pickup",
-    header: "Pickup Address",
+    header: () => <span className="font-bold text-black">Pickup Address</span>,
   },
   {
     accessorKey: "bookedBy",
-    header: "Booked By",
+    header: () => <span className="font-bold text-black">Booked By</span>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.bookedBy || "N/A"}
@@ -634,7 +625,7 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "dispatchedBy",
-    header: "Dispatched By",
+    header: () => <span className="font-bold text-black">Dispatched By</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <User className="h-3 w-3 text-muted-foreground" />
@@ -646,7 +637,7 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "dispatchedTime",
-    header: "Dispatched Time",
+    header: () => <span className="font-bold text-black">Dispatched Time</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Clock className="h-3 w-3 text-muted-foreground" />
@@ -658,14 +649,14 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "driver",
-    header: "Driver",
+    header: () => <span className="font-bold text-black">Driver</span>,
     cell: ({ row }) => (
       <span className="font-medium">{row.getValue("driver")}</span>
     ),
   },
   {
     accessorKey: "vehicle",
-    header: "Tuk Number",
+    header: () => <span className="font-bold text-black">Tuk Number</span>,
     cell: ({ row }) => {
       const vehicle = row.getValue("vehicle") as string;
       return (
@@ -678,7 +669,7 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "fareScheme",
-    header: "Fare Scheme",
+    header: () => <span className="font-bold text-black">Fare Scheme</span>,
     cell: ({ row }) => (
       <Badge variant="outline" className="text-xs">
         {row.original.fareScheme || "Tuk Standard"}
@@ -687,14 +678,12 @@ const tukDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COMBINED/ALL COLUMNS (Common fields for all dispatched bookings)
-// ═══════════════════════════════════════════════════════════════════════════
+// Combined columns
 const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   selectColumn,
   {
     accessorKey: "refNumber",
-    header: "Ref ID",
+    header: () => <span className="font-bold text-black">Ref ID</span>,
     cell: ({ row }) => (
       <span className="font-mono font-medium text-primary">
         {row.getValue("refNumber")}
@@ -703,7 +692,7 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "source",
-    header: "Source",
+    header: () => <span className="font-bold text-black">Source</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -752,14 +741,14 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "customer",
-    header: "Customer",
+    header: () => <span className="font-bold text-black">Customer</span>,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("customer")}</div>
     ),
   },
   {
     accessorKey: "contact",
-    header: "Contact",
+    header: () => <span className="font-bold text-black">Contact</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground font-mono text-sm">
         {row.getValue("contact")}
@@ -768,7 +757,7 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "pickupTime",
-    header: "Pickup Time",
+    header: () => <span className="font-bold text-black">Pickup Time</span>,
     cell: ({ row }) => (
       <span className="text-sm font-medium">
         {row.getValue("pickupTime")}
@@ -777,7 +766,7 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "dispatchedBy",
-    header: "Dispatched By",
+    header: () => <span className="font-bold text-black">Dispatched By</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <User className="h-3 w-3 text-muted-foreground" />
@@ -789,7 +778,7 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "dispatchedTime",
-    header: "Dispatched Time",
+    header: () => <span className="font-bold text-black">Dispatched Time</span>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Clock className="h-3 w-3 text-muted-foreground" />
@@ -801,14 +790,14 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "driver",
-    header: "Driver",
+    header: () => <span className="font-bold text-black">Driver</span>,
     cell: ({ row }) => (
       <span className="font-medium">{row.getValue("driver")}</span>
     ),
   },
   {
     accessorKey: "vehicleType",
-    header: "Vehicle Type",
+    header: () => <span className="font-bold text-black">Vehicle Type</span>,
     filterFn: (row, id, filterValue) => {
       if (!filterValue || filterValue.length === 0) return true;
       return filterValue.includes(row.getValue(id));
@@ -825,62 +814,46 @@ const combinedDispatchedColumns: ColumnDef<DispatchedBooking>[] = [
   },
   {
     accessorKey: "vehicle",
-    header: "Vehicle/Tuk #",
+    header: () => <span className="font-bold text-black">Vehicle/Tuk #</span>,
     cell: ({ row }) => (
-      <span className="font-mono text-sm">
+      <span className="font-mono text-sm font-bold">
         {row.getValue("vehicle")}
       </span>
     ),
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// FILTER STATE TYPE
-// ═══════════════════════════════════════════════════════════════════════════
 type SourceFilter = "all" | "Portal" | "App";
 type VehicleFilter = "all" | "Tuk" | "nonTuk";
 
-// Determine which column set to use based on filters
 const getColumnSet = (
   sourceFilter: SourceFilter,
   vehicleFilter: VehicleFilter
 ): "manual" | "tuk" | "combined" => {
-  // If source is Portal/Manual and vehicle is Tuk
   if (sourceFilter === "Portal" && vehicleFilter === "Tuk") {
     return "tuk";
   }
-
-  // If source is specifically Portal/Manual (non-tuk)
   if (sourceFilter === "Portal" && vehicleFilter === "nonTuk") {
     return "manual";
   }
-
-  // For all other cases, show combined columns
   return "combined";
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
 export default function UnifiedDispatchedReports() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [vehicleFilter, setVehicleFilter] = useState<VehicleFilter>("all");
 
-  // All data combined
   const allBookingsData = useMemo(() => allDispatchedData, []);
 
-  // Filter data based on source and vehicle filters
   const filteredData = useMemo(() => {
     let result = [...allBookingsData];
 
-    // Filter by source
     if (sourceFilter === "Portal") {
       result = result.filter((item) => item.source === "Portal");
     } else if (sourceFilter === "App") {
       result = result.filter((item) => item.source === "App");
     }
 
-    // Filter by vehicle
     if (vehicleFilter === "Tuk") {
       result = result.filter((item) => item.vehicleType === "Tuk");
     } else if (vehicleFilter === "nonTuk") {
@@ -890,7 +863,6 @@ export default function UnifiedDispatchedReports() {
     return result;
   }, [allBookingsData, sourceFilter, vehicleFilter]);
 
-  // Stats calculation
   const stats = useMemo(() => {
     const all = allBookingsData;
     const portal = all.filter((d) => d.source === "Portal");
@@ -914,7 +886,6 @@ export default function UnifiedDispatchedReports() {
     };
   }, [allBookingsData, filteredData]);
 
-  // Get columns based on current filter state
   const currentColumns = useMemo(() => {
     const columnSet = getColumnSet(sourceFilter, vehicleFilter);
 
@@ -928,11 +899,9 @@ export default function UnifiedDispatchedReports() {
     }
   }, [sourceFilter, vehicleFilter]);
 
-  // Get dynamic filters for the table
   const tableFilters = useMemo(() => {
     const filters = [];
 
-    // Source filter (only in combined view)
     if (sourceFilter === "all") {
       filters.push({
         key: "source",
@@ -944,7 +913,6 @@ export default function UnifiedDispatchedReports() {
       });
     }
 
-    // Vehicle type filter
     const vehicleOptions = [
       { value: "Bus", label: "Bus" },
       { value: "Luxury", label: "Luxury" },
@@ -959,7 +927,6 @@ export default function UnifiedDispatchedReports() {
       options: vehicleOptions,
     });
 
-    // Platform filter (only for App view)
     if (sourceFilter === "App") {
       filters.push({
         key: "platform",
@@ -974,7 +941,6 @@ export default function UnifiedDispatchedReports() {
     return filters;
   }, [sourceFilter]);
 
-  // Get title based on filters
   const getTitle = () => {
     if (sourceFilter === "Portal" && vehicleFilter === "Tuk") {
       return "Tuk Dispatched (Manual)";
@@ -1003,7 +969,6 @@ export default function UnifiedDispatchedReports() {
     return "All Dispatched Bookings";
   };
 
-  // Get subtitle
   const getSubtitle = () => {
     const parts = [];
     if (sourceFilter === "all") parts.push("All Sources");
@@ -1017,19 +982,46 @@ export default function UnifiedDispatchedReports() {
     return `${parts.join(" • ")} • ${stats.filtered} records`;
   };
 
-  // PDF Export
-  const exportPDF = () => {
+  // --- PDF & Print Logic ---
+  const generateReport = async (action: "save" | "print") => {
     const doc = new jsPDF({ orientation: "landscape" });
 
-    doc.setFontSize(20);
-    doc.setTextColor(34, 197, 94); // Green for dispatched
-    doc.text("Dispatched Booking Report", 14, 22);
+    // 1. Add Logo
+    try {
+      const logoData = await getBase64ImageFromURL("/logo.png");
+      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
+    } catch (e) {
+      console.error("Logo missing", e);
+    }
 
-    doc.setFontSize(11);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
-    doc.text(`View: ${getTitle()}`, 14, 36);
-    doc.text(`Total Records: ${filteredData.length}`, 14, 42);
+    // 2. Main Title
+    doc.setFontSize(22);
+    doc.setTextColor(34, 197, 94); // Green
+    doc.text("Dispatched Bookings Audit Report", 40, 22);
+
+    // 3. Metadata
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 28);
+
+    // 4. --- APPLIED FILTERS SECTION ---
+    doc.setDrawColor(200);
+    doc.line(14, 35, 283, 35);
+
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applied Report Filters:", 14, 42);
+
+    doc.setFont("helvetica", "normal");
+    const sourceText = sourceFilter === "all" ? "All Sources" : sourceFilter === "Portal" ? "Manual/Portal" : "App";
+    const vehicleText = vehicleFilter === "all" ? "All Vehicles" : vehicleFilter === "Tuk" ? "Tuk Only" : "Cars/Buses Only";
+    
+    doc.text(`Booking Source: ${sourceText}`, 14, 48);
+    doc.text(`Vehicle Category: ${vehicleText}`, 14, 53);
+    doc.text(`Total Records in Database: ${allBookingsData.length}`, 14, 58);
+    doc.text(`Filtered Records: ${filteredData.length}`, 14, 63);
+    doc.text(`Portal: ${stats.portal} | App: ${stats.app} | Tuk: ${stats.tuk} | Non-Tuk: ${stats.nonTuk}`, 14, 68);
 
     let tableColumn: string[];
     let tableRows: string[][];
@@ -1139,25 +1131,22 @@ export default function UnifiedDispatchedReports() {
         });
     }
 
+    // 5. Table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 48,
-      headStyles: {
-        fillColor: [34, 197, 94], // Green for dispatched
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [245, 250, 245],
-      },
-      styles: {
-        fontSize: 7,
-        cellPadding: 2,
-      },
+      startY: 75,
+      headStyles: { fillColor: [34, 197, 94], textColor: [255, 255, 255] },
+      styles: { fontSize: 8 },
+      margin: { left: 14, right: 14 },
     });
 
-    doc.save(`dispatched_report_${sourceFilter}_${vehicleFilter}.pdf`);
+    if (action === "save") {
+      doc.save(`DispatchedReport_${sourceFilter}_${vehicleFilter}_${new Date().getTime()}.pdf`);
+    } else {
+      doc.autoPrint();
+      window.open(doc.output("bloburl"), "_blank");
+    }
   };
 
   // CSV Export
@@ -1188,15 +1177,15 @@ export default function UnifiedDispatchedReports() {
         rows = filteredData.map((row) => [
           row.refNumber,
           row.organization || "Individual",
-          `"${row.customer}"`,
+          row.customer,
           row.contact,
           row.hireType || "N/A",
           row.pickupTime,
-          `"${row.pickup}"`,
+          row.pickup,
           row.bookedBy || "N/A",
           row.dispatchedBy,
           row.dispatchedTime,
-          `"${row.driver}"`,
+          row.driver,
           row.vehicle,
           row.vehicleType || "N/A",
           row.fareScheme || "Standard",
@@ -1221,15 +1210,15 @@ export default function UnifiedDispatchedReports() {
         rows = filteredData.map((row) => [
           row.refNumber,
           row.organization || "Individual",
-          `"${row.customer}"`,
+          row.customer,
           row.contact,
           row.hireType || "N/A",
           row.pickupTime,
-          `"${row.pickup}"`,
+          row.pickup,
           row.bookedBy || "N/A",
           row.dispatchedBy,
           row.dispatchedTime,
-          `"${row.driver}"`,
+          row.driver,
           row.vehicle,
           row.fareScheme || "Tuk Standard",
         ]);
@@ -1260,38 +1249,26 @@ export default function UnifiedDispatchedReports() {
           return [
             row.refNumber,
             sourceLabel,
-            `"${row.customer}"`,
+            row.customer,
             row.contact,
             row.pickupTime,
             row.dispatchedBy,
             row.dispatchedTime,
-            `"${row.driver}"`,
+            row.driver,
             row.vehicleType || "N/A",
             row.vehicle,
           ];
         });
     }
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((r) => r.join(",")),
-    ].join("\n");
-
+    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `dispatched_report_${sourceFilter}_${vehicleFilter}.csv`
-    );
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `DispatchedReport_${sourceFilter}_${vehicleFilter}_${new Date().getTime()}.csv`;
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
-  // Reset all filters
   const resetFilters = () => {
     setSourceFilter("all");
     setVehicleFilter("all");
@@ -1306,7 +1283,8 @@ export default function UnifiedDispatchedReports() {
             Dispatched Bookings Report
           </h1>
           <p className="text-muted-foreground mt-1">
-            Summary and report view of all dispatched bookings
+            Viewing {filteredData.length} records
+            {(sourceFilter !== "all" || vehicleFilter !== "all") && " (filtered)"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -1315,13 +1293,20 @@ export default function UnifiedDispatchedReports() {
             className="border-green-600 text-green-700 hover:bg-green-50"
             onClick={exportCSV}
           >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
+            <FileSpreadsheet className="mr-2 h-4 w-4" /> CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => generateReport("print")}
+            className="border-green-600 text-green-700 hover:bg-green-50"
+          >
+            <Printer className="mr-2 h-4 w-4" /> Print
           </Button>
           <Button
             className="bg-green-600 hover:bg-green-700"
-            onClick={exportPDF}
+            onClick={() => generateReport("save")}
           >
-            <FileText className="mr-2 h-4 w-4" /> Export PDF
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
           </Button>
         </div>
       </div>
@@ -1332,7 +1317,6 @@ export default function UnifiedDispatchedReports() {
           Filter by Source
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
-          {/* All Sources */}
           <Card
             className={`cursor-pointer transition-all ${
               sourceFilter === "all"
@@ -1359,7 +1343,6 @@ export default function UnifiedDispatchedReports() {
             </CardContent>
           </Card>
 
-          {/* Manual/Portal */}
           <Card
             className={`cursor-pointer transition-all ${
               sourceFilter === "Portal"
@@ -1388,7 +1371,6 @@ export default function UnifiedDispatchedReports() {
             </CardContent>
           </Card>
 
-          {/* App */}
           <Card
             className={`cursor-pointer transition-all ${
               sourceFilter === "App"
@@ -1423,7 +1405,6 @@ export default function UnifiedDispatchedReports() {
           Filter by Vehicle Type
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
-          {/* All Vehicles */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "all"
@@ -1452,7 +1433,6 @@ export default function UnifiedDispatchedReports() {
             </CardContent>
           </Card>
 
-          {/* Tuk Only */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "Tuk"
@@ -1479,7 +1459,6 @@ export default function UnifiedDispatchedReports() {
             </CardContent>
           </Card>
 
-          {/* Non-Tuk */}
           <Card
             className={`cursor-pointer transition-all ${
               vehicleFilter === "nonTuk"
@@ -1554,10 +1533,10 @@ export default function UnifiedDispatchedReports() {
 
       {/* Table Card */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 border-b">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 {getTitle()}
               </CardTitle>
@@ -1565,7 +1544,6 @@ export default function UnifiedDispatchedReports() {
                 {getSubtitle()}
               </p>
             </div>
-            {/* Column set indicator */}
             <Badge variant="outline" className="self-start">
               {getColumnSet(sourceFilter, vehicleFilter) === "manual"
                 ? "13 Columns (Manual Format)"
@@ -1575,16 +1553,13 @@ export default function UnifiedDispatchedReports() {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          {/* Key forces re-render when filters change */}
+        <CardContent className="pt-4">
           <EnhancedDataTable
             key={`${sourceFilter}-${vehicleFilter}-dispatched`}
             columns={currentColumns}
             data={filteredData}
             searchKey="customer"
             searchPlaceholder="Search by customer name..."
-            enableColumnVisibility={true}
-            pageSize={10}
             filters={tableFilters}
           />
         </CardContent>

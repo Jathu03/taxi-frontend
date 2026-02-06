@@ -74,7 +74,7 @@ export function EnhancedDataTable<TData, TValue>({
 }: EnhancedDataTableProps<TData, TValue>) {
   // State
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => 
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() =>
     initialFilters.map((f) => ({ id: f.id, value: f.value }))
   );
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -400,9 +400,9 @@ export function EnhancedDataTable<TData, TValue>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

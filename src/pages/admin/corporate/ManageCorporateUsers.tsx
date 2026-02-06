@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, UserPlus } from "lucide-react"; // Added Plus and UserPlus icons
 
 interface CorporateUser {
   id: string;
@@ -109,11 +109,19 @@ export default function ManageCorporateUsers() {
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle>Corporate Users</CardTitle>
               <CardDescription>Showing all {filteredUsers.length} users</CardDescription>
             </div>
+            {/* NEW ADD USER BUTTON */}
+            <Button 
+              className="bg-[#6330B8] hover:bg-[#4f2694] text-white gap-2 shadow-md transition-all hover:scale-105"
+              onClick={() => navigate(`/admin/corporate/${id}/users/add`)}
+            >
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -126,7 +134,7 @@ export default function ManageCorporateUsers() {
             />
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border bg-white">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -141,8 +149,11 @@ export default function ManageCorporateUsers() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No users found.
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <UserPlus className="h-8 w-8 mb-2 opacity-20" />
+                        <p>No users found matching your search.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -157,15 +168,17 @@ export default function ManageCorporateUsers() {
                         <div className="flex justify-end gap-2">
                           <Button
                             size="sm"
+                            variant="outline"
                             onClick={() => navigate(`/admin/corporate/${id}/users/edit/${user.id}`)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                           >
                             Edit
                           </Button>
                           <Button
                             size="sm"
+                            variant="outline"
                             onClick={() => navigate(`/admin/corporate/${id}/users/delete/${user.id}`)}
-                            className="bg-red-500 hover:bg-red-600 text-white"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
                           >
                             Delete
                           </Button>

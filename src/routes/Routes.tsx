@@ -121,6 +121,7 @@ import FareSchemeReport from "@/pages/admin/reports/FareSchemeReport";
 import CorporateReport from "@/pages/admin/reports/CorporateReport";
 import CorporateUserReport from "@/pages/admin/reports/CorporateUsersReport";
 import UserReport from "@/pages/admin/reports/UserReport";
+import UnifiedModificationReport from "@/pages/admin/reports/UnifiedModificationReport";
 
 export const router = createBrowserRouter([
   {
@@ -276,8 +277,9 @@ export const router = createBrowserRouter([
           { path: "/admin/reports/fare-scheme-details", element: <FareSchemeReport /> }, 
           { path: "/admin/reports/corporate-details", element: <CorporateReport /> },
           { path: "/admin/reports/corporate-user-details", element: <CorporateUserReport /> },
-          {path: "/admin/reports/user-details", element: <UserReport /> },
+          { path: "/admin/reports/user-details", element: <UserReport /> },
           { path: "/admin/reports/promo-code-details", element: <PromoCodeReport /> },
+          { path: "/admin/reports/modification", element: <UnifiedModificationReport />}
         ],
       },
     ],
