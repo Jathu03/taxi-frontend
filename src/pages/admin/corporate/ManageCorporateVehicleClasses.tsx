@@ -81,9 +81,9 @@ export default function ManageCorporateVehicleClasses() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Class Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-black">Class Name</TableHead>
+                  <TableHead className="font-bold text-black">Status</TableHead>
+                  <TableHead className="text-right font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

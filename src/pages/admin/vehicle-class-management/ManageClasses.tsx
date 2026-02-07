@@ -69,15 +69,15 @@ export default function ManageClasses() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Class Name</TableHead>
-                  <TableHead>Class Code</TableHead>
-                  <TableHead>Show in App</TableHead>
-                  <TableHead>Fare Scheme</TableHead>
-                  <TableHead>Corporate Fare Scheme</TableHead>
-                  <TableHead>RoadTrip Fare Scheme</TableHead>
-                  <TableHead>App Fare Scheme</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="font-bold text-black">Class Name</TableHead>
+                  <TableHead className="font-bold text-black">Class Code</TableHead>
+                  <TableHead className="font-bold text-black">Show in App</TableHead>
+                  <TableHead className="font-bold text-black">Fare Scheme</TableHead>
+                  <TableHead className="font-bold text-black">Corporate Fare Scheme</TableHead>
+                  <TableHead className="font-bold text-black">RoadTrip Fare Scheme</TableHead>
+                  <TableHead className="font-bold text-black">App Fare Scheme</TableHead>
+                  <TableHead className="font-bold text-black">Commission</TableHead>
+                  <TableHead className="font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

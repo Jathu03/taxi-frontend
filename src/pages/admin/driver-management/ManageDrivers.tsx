@@ -104,17 +104,17 @@ export default function ManageDrivers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>First Name</TableHead>
-                  <TableHead>Last Name</TableHead>
-                  <TableHead>NIC</TableHead>
-                  <TableHead>Contact Number</TableHead>
-                  <TableHead>Emergency Contact Number</TableHead>
-                  <TableHead>Manual Dispatch</TableHead>
-                  <TableHead>Blocked</TableHead>
-                  <TableHead>Last Location</TableHead>
-                  <TableHead>App Ver.</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead className="font-bold text-black">Code</TableHead>
+                  <TableHead className="font-bold text-black">First Name</TableHead>
+                  <TableHead className="font-bold text-black">Last Name</TableHead>
+                  <TableHead className="font-bold text-black">NIC</TableHead>
+                  <TableHead className="font-bold text-black">Contact Number</TableHead>
+                  <TableHead className="font-bold text-black">Emergency Contact Number</TableHead>
+                  <TableHead className="font-bold text-black">Manual Dispatch</TableHead>
+                  <TableHead className="font-bold text-black">Blocked</TableHead>
+                  <TableHead className="font-bold text-black">Last Location</TableHead>
+                  <TableHead className="font-bold text-black">App Ver.</TableHead>
+                  <TableHead className="font-bold text-black">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -98,21 +98,21 @@ export default function ManagePromoCodes() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Vehicle Classes</TableHead>
-                  <TableHead>Discount In</TableHead>
-                  <TableHead>Discount Value</TableHead>
-                  <TableHead>Is First Time Only</TableHead>
-                  <TableHead>Max Amount</TableHead>
-                  <TableHead>Max Count Per User</TableHead>
-                  <TableHead>Max Usage</TableHead>
-                  <TableHead>Max Hire Count</TableHead>
-                  <TableHead>Minimum Hire Count</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Is Active</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead className="font-bold text-black">Code</TableHead>
+                  <TableHead className="font-bold text-black">Description</TableHead>
+                  <TableHead className="font-bold text-black">Vehicle Classes</TableHead>
+                  <TableHead className="font-bold text-black">Discount In</TableHead>
+                  <TableHead className="font-bold text-black">Discount Value</TableHead>
+                  <TableHead className="font-bold text-black">Is First Time Only</TableHead>
+                  <TableHead className="font-bold text-black">Max Amount</TableHead>
+                  <TableHead className="font-bold text-black">Max Count Per User</TableHead>
+                  <TableHead className="font-bold text-black">Max Usage</TableHead>
+                  <TableHead className="font-bold text-black">Max Hire Count</TableHead>
+                  <TableHead className="font-bold text-black">Minimum Hire Count</TableHead>
+                  <TableHead className="font-bold text-black">Start Date</TableHead>
+                  <TableHead className="font-bold text-black">End Date</TableHead>
+                  <TableHead className="font-bold text-black">Is Active</TableHead>
+                  <TableHead className="font-bold text-black">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

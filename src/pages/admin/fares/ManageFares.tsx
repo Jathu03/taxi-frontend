@@ -91,13 +91,13 @@ export default function ManageFares() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Metered</TableHead>
-                  <TableHead>Min Km</TableHead>
-                  <TableHead>Min Rate</TableHead>
-                  <TableHead>Rate Per Km</TableHead>
-                  <TableHead>Rate Per Km ^</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="font-bold text-black">Code</TableHead>
+                  <TableHead className="font-bold text-black">Metered</TableHead>
+                  <TableHead className="font-bold text-black">Min Km</TableHead>
+                  <TableHead className="font-bold text-black">Min Rate</TableHead>
+                  <TableHead className="font-bold text-black">Rate Per Km</TableHead>
+                  <TableHead className="font-bold text-black">Rate Per Km ^</TableHead>
+                  <TableHead className="text-right font-bold text-black">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

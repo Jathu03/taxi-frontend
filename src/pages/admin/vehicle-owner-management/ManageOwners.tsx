@@ -91,15 +91,15 @@ export default function ManageOwners() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Personal/Company Name</TableHead>
-                  <TableHead>NIC/Business Registration</TableHead>
-                  <TableHead>Primary Contact</TableHead>
-                  <TableHead>Secondary Contact</TableHead>
-                  <TableHead>Postal Address</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Date Modified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-black">Personal/Company Name</TableHead>
+                  <TableHead className="font-bold text-black">NIC/Business Registration</TableHead>
+                  <TableHead className="font-bold text-black">Primary Contact</TableHead>
+                  <TableHead className="font-bold text-black">Secondary Contact</TableHead>
+                  <TableHead className="font-bold text-black">Postal Address</TableHead>
+                  <TableHead className="font-bold text-black">Email</TableHead>
+                  <TableHead className="font-bold text-black">Company</TableHead>
+                  <TableHead className="font-bold text-black">Date Modified</TableHead>
+                  <TableHead className="text-right font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

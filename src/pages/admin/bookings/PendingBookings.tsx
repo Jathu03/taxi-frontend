@@ -31,7 +31,7 @@ const columns = (
 ): ColumnDef<PendingBooking>[] => [
   { 
     accessorKey: "bookingNumber", 
-    header: "Booking #",
+    header: () => <span className="font-bold text-black">Booking #</span>,
     cell: ({ row }) => {
       const booking = row.original;
       return (

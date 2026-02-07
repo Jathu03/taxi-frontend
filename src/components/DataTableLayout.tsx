@@ -19,10 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ChevronsLeft, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
   ChevronsRight,
   Download,
   Trash2,
@@ -50,15 +50,15 @@ export interface DataTableProps<TData, TValue> {
   data: TData[];
 
   title?: string;
-  
+
   // Search
   searchKey?: keyof TData;
   searchPlaceholder?: string;
-  
+
   // Pagination
   pageSize?: number;
   pageSizeOptions?: number[];
-  
+
   // Bulk actions
   enableBulkDelete?: boolean;
   onBulkDelete?: (ids: string[]) => void;
@@ -70,12 +70,12 @@ export interface DataTableProps<TData, TValue> {
     options: { value: unknown; label: string }[];
   }[];
   idKey?: keyof TData;
-  
+
   // Export
   enableExport?: boolean;
   onExport?: (data: TData[]) => void;
   exportFileName?: string;
-  
+
   // Filters
   filters?: {
     key: keyof TData;
@@ -84,10 +84,10 @@ export interface DataTableProps<TData, TValue> {
   }[];
   enableDynamicFilters?: boolean;
   enableFilters?: boolean; // Show/hide filter dropdown
-  
+
   // Column visibility
   enableColumnVisibility?: boolean;
-  
+
   // Custom actions
   customActions?: React.ReactNode;
   // Create dialog
@@ -96,13 +96,13 @@ export interface DataTableProps<TData, TValue> {
   createDialogInitialValues?: Partial<TData>;
   createDialogTitle?: string;
   createDialogDescription?: string;
-  
+
   // Loading state
   isLoading?: boolean;
-  
+
   // Empty state
   emptyMessage?: string;
-  
+
   // Hide pagination
   hidePagination?: boolean;
 }
@@ -149,15 +149,15 @@ export function EnhancedDataTable<TData, TValue>({
     try {
       // Check if column exists
       if (!column || typeof column !== 'object') return null;
-      
+
       // Check if column has accessorKey property
       if (!('accessorKey' in column)) return null;
-      
+
       // Safely access the accessorKey using unknown first (TypeScript recommended approach)
       const columnAsUnknown = column as unknown;
       const columnWithKey = columnAsUnknown as { accessorKey: unknown };
       const accessorKey = columnWithKey.accessorKey;
-      
+
       // Return only if it's a string
       return typeof accessorKey === 'string' ? accessorKey : null;
     } catch (error) {
@@ -170,29 +170,29 @@ export function EnhancedDataTable<TData, TValue>({
   // Generate dynamic filters from data
   const dynamicFilters = useMemo(() => {
     if (!enableDynamicFilters || data.length === 0) return [];
-    
+
     const filters: { key: keyof TData; label: string; options: { value: string; label: string }[] }[] = [];
-    
+
     try {
       // Get all unique values for each column
       const columnsToFilter = columns.filter(col => {
         const columnKey = getAccessorKey(col);
         if (!columnKey) return false;
-        
+
         // Exclude certain columns
         if (columnKey === 'id' || columnKey === 'actions' || columnKey === 'select') return false;
-        
+
         // Check if the key exists in the data
         const key = columnKey as keyof TData;
         return data.some(item => item && item[key] !== undefined);
       });
-      
+
       columnsToFilter.forEach(column => {
         const columnKey = getAccessorKey(column);
         if (!columnKey) return;
-        
+
         const key = columnKey as keyof TData;
-        
+
         // Get unique values for this column
         const values = [...new Set(
           data
@@ -208,7 +208,7 @@ export function EnhancedDataTable<TData, TValue>({
             })
             .filter(Boolean)
         )];
-        
+
         // Only create filters for columns with 2-10 unique values
         if (values.length > 1 && values.length <= 10) {
           filters.push({
@@ -221,9 +221,9 @@ export function EnhancedDataTable<TData, TValue>({
     } catch (error) {
       console.error('Error generating dynamic filters:', error);
     }
-    
 
-    
+
+
     return filters;
   }, [data, columns, enableDynamicFilters, getAccessorKey]);
 
@@ -242,7 +242,7 @@ export function EnhancedDataTable<TData, TValue>({
   // Add selection column if bulk actions are enabled
   const tableColumns = useMemo(() => {
     if (!enableBulkDelete && !enableBulkChange) return columns;
-    
+
     const selectionColumn: ColumnDef<TData, TValue> = {
       id: "select",
       header: ({ table }) => (
@@ -262,7 +262,7 @@ export function EnhancedDataTable<TData, TValue>({
       enableSorting: false,
       enableHiding: false,
     };
-    
+
     return [selectionColumn, ...columns];
   }, [columns, enableBulkDelete, enableBulkChange]);
 
@@ -291,12 +291,12 @@ export function EnhancedDataTable<TData, TValue>({
   // Handle bulk delete
   const handleBulkDelete = useCallback(() => {
     if (!onBulkDelete) return;
-    
+
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map(row => 
+    const selectedIds = selectedRows.map(row =>
       String(row.original[idKey])
     );
-    
+
     onBulkDelete(selectedIds);
     setRowSelection({});
   }, [table, onBulkDelete, idKey]);
@@ -304,12 +304,12 @@ export function EnhancedDataTable<TData, TValue>({
   // Handle bulk change
   const handleBulkChange = useCallback((field: keyof TData, value: unknown) => {
     if (!onBulkChange) return;
-    
+
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map(row => 
+    const selectedIds = selectedRows.map(row =>
       String(row.original[idKey])
     );
-    
+
     onBulkChange(selectedIds, field, value);
     setRowSelection({});
     setShowBulkChangeMenu(false);
@@ -318,7 +318,7 @@ export function EnhancedDataTable<TData, TValue>({
   // Handle export
   const handleExport = useCallback(() => {
     const exportData = table.getFilteredRowModel().rows.map(row => row.original);
-    
+
     if (onExport) {
       onExport(exportData);
     } else {
@@ -327,7 +327,7 @@ export function EnhancedDataTable<TData, TValue>({
         alert("No data to export");
         return;
       }
-      
+
       // Get column headers
       const headers = table.getAllColumns()
         .filter(col => col.getIsVisible())
@@ -336,11 +336,11 @@ export function EnhancedDataTable<TData, TValue>({
           return accessorKey || col.id;
         })
         .filter(Boolean);
-      
+
       // Create CSV content
       const csvContent = [
         headers.join(','),
-        ...exportData.map(row => 
+        ...exportData.map(row =>
           headers.map(header => {
             const value = (row as any)[header];
             // Escape commas and quotes in CSV
@@ -351,7 +351,7 @@ export function EnhancedDataTable<TData, TValue>({
           }).join(',')
         )
       ].join('\n');
-      
+
       // Download CSV file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -371,13 +371,13 @@ export function EnhancedDataTable<TData, TValue>({
       ...prev,
       [filterKey]: value,
     }));
-    
+
     // Find the column by accessorKey
     const column = table.getAllColumns().find(col => {
       const accessorKey = getAccessorKey(col);
       return accessorKey === filterKey;
     });
-    
+
     if (column) {
       if (value) {
         column.setFilterValue(value);
@@ -401,318 +401,320 @@ export function EnhancedDataTable<TData, TValue>({
   try {
     return (
       <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        {/* Search */}
-        <div className="flex-1 max-w-sm">
-          <Input
-            placeholder={searchPlaceholder}
-            value={globalFilter ?? ""}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
-          />
-        </div>
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          {/* Search */}
+          <div className="flex-1 max-w-sm">
+            <Input
+              placeholder={searchPlaceholder}
+              value={globalFilter ?? ""}
+              onChange={(event) => setGlobalFilter(event.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {/* Create Button */}
-          {onCreate && createDialogFields && (
-            <>
-              <Button onClick={() => setOpenCreateDialog(true)} variant="default">
-              { createDialogTitle }
-              </Button>
-              <CreateDialog
-                open={openCreateDialog}
-                setOpen={setOpenCreateDialog}
-                title={createDialogTitle}
-                description={createDialogDescription}
-                initialValues={createDialogInitialValues || {}}
-                fields={createDialogFields}
-                onSubmit={onCreate}
-              />
-            </>
-          )}
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {/* Create Button */}
+            {onCreate && createDialogFields && (
+              <>
+                <Button onClick={() => setOpenCreateDialog(true)} variant="default">
+                  {createDialogTitle}
+                </Button>
+                <CreateDialog
+                  open={openCreateDialog}
+                  setOpen={setOpenCreateDialog}
+                  title={createDialogTitle}
+                  description={createDialogDescription}
+                  initialValues={createDialogInitialValues || {}}
+                  fields={createDialogFields}
+                  onSubmit={onCreate}
+                />
+              </>
+            )}
 
-          {/* Filters */}
-          {enableFilters && allFilters && allFilters.length > 0 ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
+            {/* Filters */}
+            {enableFilters && allFilters && allFilters.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                    {hasActiveFilters && (
+                      <Badge variant="secondary" className="ml-2">
+                        {Object.keys(activeFilters).length + (globalFilter ? 1 : 0)}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {allFilters.map((filter) => {
+                    // Safety check for filter structure
+                    if (!filter || typeof filter !== 'object') {
+                      console.warn('Invalid filter structure:', filter);
+                      return null;
+                    }
+
+                    const filterKey = String(filter.key || '');
+                    const filterLabel = String(filter.label || '');
+                    const filterOptions = Array.isArray(filter.options) ? filter.options : [];
+
+                    return (
+                      <div key={filterKey} className="p-2">
+                        <label className="text-sm font-medium">{filterLabel}</label>
+                        <Select
+                          value={activeFilters[filterKey] || "__all__"}
+                          onValueChange={(value) => handleFilterChange(filterKey, value === "__all__" ? "" : value)}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder={`Select ${filterLabel}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__all__">All</SelectItem>
+                            {filterOptions.map((option) => {
+                              if (!option || typeof option !== 'object') {
+                                console.warn('Invalid option structure:', option);
+                                return null;
+                              }
+                              const optionValue = String(option.value || '');
+                              if (!optionValue) return null;
+                              return (
+                                <SelectItem key={optionValue} value={optionValue}>
+                                  {String(option.label || '')}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  })}
                   {hasActiveFilters && (
-                    <Badge variant="secondary" className="ml-2">
-                      {Object.keys(activeFilters).length + (globalFilter ? 1 : 0)}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {allFilters.map((filter) => {
-                  // Safety check for filter structure
-                  if (!filter || typeof filter !== 'object') {
-                    console.warn('Invalid filter structure:', filter);
-                    return null;
-                  }
-                  
-                  const filterKey = String(filter.key || '');
-                  const filterLabel = String(filter.label || '');
-                  const filterOptions = Array.isArray(filter.options) ? filter.options : [];
-                  
-                  return (
-                    <div key={filterKey} className="p-2">
-                      <label className="text-sm font-medium">{filterLabel}</label>
-                      <Select
-                        value={activeFilters[filterKey] || "__all__"}
-                        onValueChange={(value) => handleFilterChange(filterKey, value === "__all__" ? "" : value)}
+                    <div className="p-2 border-t">
+                      <Button
+                        variant="ghost"
+                        onClick={clearFilters}
+                        className="w-full"
                       >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder={`Select ${filterLabel}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__all__">All</SelectItem>
-                          {filterOptions.map((option) => {
-                            if (!option || typeof option !== 'object') {
-                              console.warn('Invalid option structure:', option);
-                              return null;
-                            }
-                            const optionValue = String(option.value || '');
-                            if (!optionValue) return null;
-                            return (
-                              <SelectItem key={optionValue} value={optionValue}>
-                                {String(option.label || '')}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                        <X className="h-4 w-4 mr-2" />
+                        Clear filters
+                      </Button>
                     </div>
-                  );
-                })}
-                {hasActiveFilters && (
-                  <div className="p-2 border-t">
-                    <Button
-                      variant="ghost"
-                      onClick={clearFilters}
-                      className="w-full"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Clear filters
-                    </Button>
-                  </div>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
 
-          {/* Column visibility */}
-          {enableColumnVisibility && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Columns className="h-4 w-4 mr-2" />
-                  Columns
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table.getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {/* Bulk actions */}
-          {(enableBulkDelete || enableBulkChange) && selectedRows.length > 0 && (
-            <DropdownMenu open={showBulkChangeMenu} onOpenChange={setShowBulkChangeMenu}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="default">
-                  <ActivityIcon className="h-4 w-4 mr-2" />
-                  Bulk Actions ({selectedRows.length})
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {enableBulkDelete && (
-                  <DropdownMenuItem onClick={handleBulkDelete} className="text-red-600">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Selected
-                  </DropdownMenuItem>
-                )}
-                
-                {enableBulkChange && bulkChangeOptions.length > 0 && (
-                  <>
-                    {enableBulkDelete && <DropdownMenuSeparator />}
-                    {bulkChangeOptions.map((option) => (
-                      <DropdownMenu key={String(option.field)}>
-                        <DropdownMenuTrigger asChild>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Edit2 className="h-4 w-4 mr-2" />
-                            Change {option.label}
-                          </DropdownMenuItem>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent side="right">
-                          {option.options.map((opt) => (
-                                                         <DropdownMenuItem
-                               key={String(opt.value)}
-                               onClick={() => handleBulkChange(option.field, opt.value)}
-                             >
-                              {opt.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+            {/* Column visibility */}
+            {enableColumnVisibility && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Columns className="h-4 w-4 mr-2" />
+                    Columns
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table.getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
                     ))}
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
-          {/* Export */}
-          {enableExport && (
-            <Button
-              variant="outline"
-    
-              onClick={handleExport}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          )}
+            {/* Bulk actions */}
+            {(enableBulkDelete || enableBulkChange) && selectedRows.length > 0 && (
+              <DropdownMenu open={showBulkChangeMenu} onOpenChange={setShowBulkChangeMenu}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="default">
+                    <ActivityIcon className="h-4 w-4 mr-2" />
+                    Bulk Actions ({selectedRows.length})
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {enableBulkDelete && (
+                    <DropdownMenuItem onClick={handleBulkDelete} className="text-red-600">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Selected
+                    </DropdownMenuItem>
+                  )}
 
-          {/* Custom actions */}
-          {customActions}
+                  {enableBulkChange && bulkChangeOptions.length > 0 && (
+                    <>
+                      {enableBulkDelete && <DropdownMenuSeparator />}
+                      {bulkChangeOptions.map((option) => (
+                        <DropdownMenu key={String(option.field)}>
+                          <DropdownMenuTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Edit2 className="h-4 w-4 mr-2" />
+                              Change {option.label}
+                            </DropdownMenuItem>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent side="right">
+                            {option.options.map((opt) => (
+                              <DropdownMenuItem
+                                key={String(opt.value)}
+                                onClick={() => handleBulkChange(option.field, opt.value)}
+                              >
+                                {opt.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ))}
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Export */}
+            {enableExport && (
+              <Button
+                variant="outline"
+
+                onClick={handleExport}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            )}
+
+            {/* Custom actions */}
+            {customActions}
+          </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={tableColumns.length} className="h-24 text-center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+        {/* Table */}
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : typeof header.column.columnDef.header === 'string'
+                          ? <span className="font-bold text-black">{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={tableColumns.length} className="h-24 text-center">
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination - Only show if not hidden */}
-      {!hidePagination && (
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="space-x-2">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium">Rows per page</p>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue placeholder={table.getState().pagination.pageSize} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {pageSizeOptions.map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={tableColumns.length} className="h-24 text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={tableColumns.length} className="h-24 text-center">
+                    {emptyMessage}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-      )}
-    </div>
+
+        {/* Pagination - Only show if not hidden */}
+        {!hidePagination && (
+          <div className="flex items-center justify-between space-x-2 py-4">
+            <div className="flex-1 text-sm text-muted-foreground">
+              {table.getFilteredSelectedRowModel().rows.length} of{" "}
+              {table.getFilteredRowModel().rows.length} row(s) selected.
+            </div>
+            <div className="space-x-2">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">Rows per page</p>
+                <Select
+                  value={`${table.getState().pagination.pageSize}`}
+                  onValueChange={(value) => {
+                    table.setPageSize(Number(value));
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue placeholder={table.getState().pagination.pageSize} />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {pageSizeOptions.map((pageSize) => (
+                      <SelectItem key={pageSize} value={`${pageSize}`}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to first page</span>
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to last page</span>
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
   } catch (error) {
     console.error('Error rendering EnhancedDataTable:', error);

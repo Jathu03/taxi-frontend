@@ -92,14 +92,14 @@ export default function ManageVehicles() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Registration No</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Manufacture</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Insurance Expiry Date</TableHead>
-                  <TableHead>Revenue License Exp Date</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead className="font-bold text-black">Registration No</TableHead>
+                  <TableHead className="font-bold text-black">Code</TableHead>
+                  <TableHead className="font-bold text-black">Class</TableHead>
+                  <TableHead className="font-bold text-black">Manufacture</TableHead>
+                  <TableHead className="font-bold text-black">Model</TableHead>
+                  <TableHead className="font-bold text-black">Insurance Expiry Date</TableHead>
+                  <TableHead className="font-bold text-black">Revenue License Exp Date</TableHead>
+                  <TableHead className="font-bold text-black">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

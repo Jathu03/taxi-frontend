@@ -203,13 +203,13 @@ export default function ViewActivityLog() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>First Name</TableHead>
-                  <TableHead>Contact Number</TableHead>
-                  <TableHead>Vehicle Code</TableHead>
-                  <TableHead>Vehicle Model</TableHead>
-                  <TableHead>Last Location</TableHead>
-                  <TableHead>Total Online Duration</TableHead>
+                  <TableHead className="font-bold text-black">Code</TableHead>
+                  <TableHead className="font-bold text-black">First Name</TableHead>
+                  <TableHead className="font-bold text-black">Contact Number</TableHead>
+                  <TableHead className="font-bold text-black">Vehicle Code</TableHead>
+                  <TableHead className="font-bold text-black">Vehicle Model</TableHead>
+                  <TableHead className="font-bold text-black">Last Location</TableHead>
+                  <TableHead className="font-bold text-black">Total Online Duration</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

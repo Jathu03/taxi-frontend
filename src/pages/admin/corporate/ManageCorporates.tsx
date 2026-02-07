@@ -112,17 +112,17 @@ export default function ManageCorporates() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[150px]">Name</TableHead>
-                  <TableHead className="min-w-[80px]">Code</TableHead>
-                  <TableHead className="min-w-[130px]">Primary Contact</TableHead>
-                  <TableHead className="min-w-[110px]">Phone</TableHead>
-                  <TableHead className="min-w-[180px]">Email</TableHead>
-                  <TableHead className="min-w-[200px]">Address</TableHead>
-                  <TableHead className="min-w-[100px]">Date</TableHead>
-                  <TableHead className="min-w-[100px]">Cash Discount</TableHead>
-                  <TableHead className="min-w-[110px]">Credit Discount</TableHead>
-                  <TableHead className="min-w-[120px]">Quick Booking</TableHead>
-                  <TableHead className="min-w-[550px] text-right">Actions</TableHead>
+                  <TableHead className="min-w-[150px] font-bold text-black">Name</TableHead>
+                  <TableHead className="min-w-[80px] font-bold text-black">Code</TableHead>
+                  <TableHead className="min-w-[130px] font-bold text-black">Primary Contact</TableHead>
+                  <TableHead className="min-w-[110px] font-bold text-black">Phone</TableHead>
+                  <TableHead className="min-w-[180px] font-bold text-black">Email</TableHead>
+                  <TableHead className="min-w-[200px] font-bold text-black">Address</TableHead>
+                  <TableHead className="min-w-[100px] font-bold text-black">Date</TableHead>
+                  <TableHead className="min-w-[100px] font-bold text-black">Cash Discount</TableHead>
+                  <TableHead className="min-w-[110px] font-bold text-black">Credit Discount</TableHead>
+                  <TableHead className="min-w-[120px] font-bold text-black">Quick Booking</TableHead>
+                  <TableHead className="min-w-[550px] text-right font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -83,17 +83,17 @@ export default function ManageModels() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Manufacturer</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Model Code</TableHead>
-                  <TableHead>Frame</TableHead>
-                  <TableHead>Transmission Type</TableHead>
-                  <TableHead>Trim Level</TableHead>
-                  <TableHead>Fuel Injection Type</TableHead>
-                  <TableHead>Turbo</TableHead>
-                  <TableHead>Comments</TableHead>
-                  <TableHead>Date Modified</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="font-bold text-black">Manufacturer</TableHead>
+                  <TableHead className="font-bold text-black">Model</TableHead>
+                  <TableHead className="font-bold text-black">Model Code</TableHead>
+                  <TableHead className="font-bold text-black">Frame</TableHead>
+                  <TableHead className="font-bold text-black">Transmission Type</TableHead>
+                  <TableHead className="font-bold text-black">Trim Level</TableHead>
+                  <TableHead className="font-bold text-black">Fuel Injection Type</TableHead>
+                  <TableHead className="font-bold text-black">Turbo</TableHead>
+                  <TableHead className="font-bold text-black">Comments</TableHead>
+                  <TableHead className="font-bold text-black">Date Modified</TableHead>
+                  <TableHead className="font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

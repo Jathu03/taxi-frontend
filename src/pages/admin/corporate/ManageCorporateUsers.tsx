@@ -115,7 +115,7 @@ export default function ManageCorporateUsers() {
               <CardDescription>Showing all {filteredUsers.length} users</CardDescription>
             </div>
             {/* NEW ADD USER BUTTON */}
-            <Button 
+            <Button
               className="bg-[#6330B8] hover:bg-[#4f2694] text-white gap-2 shadow-md transition-all hover:scale-105"
               onClick={() => navigate(`/admin/corporate/${id}/users/add`)}
             >
@@ -138,12 +138,12 @@ export default function ManageCorporateUsers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>First Name</TableHead>
-                  <TableHead>Last Name</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-black">User Name</TableHead>
+                  <TableHead className="font-bold text-black">Email</TableHead>
+                  <TableHead className="font-bold text-black">First Name</TableHead>
+                  <TableHead className="font-bold text-black">Last Name</TableHead>
+                  <TableHead className="font-bold text-black">Phone Number</TableHead>
+                  <TableHead className="text-right font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

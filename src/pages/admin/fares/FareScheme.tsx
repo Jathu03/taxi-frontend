@@ -78,13 +78,13 @@ export default function FareScheme() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Scheme Name</TableHead>
-                  <TableHead>Vehicle Class</TableHead>
-                  <TableHead>Base Fare</TableHead>
-                  <TableHead>Per KM</TableHead>
-                  <TableHead>Per Min</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-black">Scheme Name</TableHead>
+                  <TableHead className="font-bold text-black">Vehicle Class</TableHead>
+                  <TableHead className="font-bold text-black">Base Fare</TableHead>
+                  <TableHead className="font-bold text-black">Per KM</TableHead>
+                  <TableHead className="font-bold text-black">Per Min</TableHead>
+                  <TableHead className="font-bold text-black">Status</TableHead>
+                  <TableHead className="text-right font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

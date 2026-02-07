@@ -116,7 +116,7 @@ const totalHiresData = [
 ];
 
 const totalHiresChartConfig = {
-    count: {
+  count: {
     label: "Hire Count",
     color: "#6330B8",
   },
@@ -134,10 +134,10 @@ const topDriversData = [
 ];
 
 const topDriversChartConfig = {
- count:{
-  label : " Hire Count",
-  color: " #6330B8"
- }
+  count: {
+    label: " Hire Count",
+    color: " #6330B8"
+  }
 }
 
 const vehicleCategoriesData = [
@@ -152,7 +152,7 @@ const vehicleCategoriesData = [
 ];
 
 const vehicleCategoriesChartConfig = {
-   count: {
+  count: {
     label: "Vehicle Count",
     color: "#6330B8",
   },
@@ -186,7 +186,7 @@ export default function Dashboard() {
           <Card key={stat.title} className="shadow-md">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <stat.icon className="text-[#6330B8]"/>
+                <stat.icon className="text-[#6330B8]" />
                 <div className="text-right">
                   <p className="text-xl font-semibold text-primary">
                     {typeof stat.value === "number"
@@ -253,24 +253,24 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={collectionsChartConfig}>
-             <BarChart accessibilityLayer data={collectionsData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-           
-            <ChartTooltip
-              cursor={false}
-              accessibilityLayer={true}
-              content={<ChartTooltipContent className="min-w-[10rem]" hideLabel />}
-            />
-            <Bar dataKey="income" fill="var(--color-income)" radius={8} />
-          </BarChart>
-          </ChartContainer>
+              <BarChart accessibilityLayer data={collectionsData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+
+                <ChartTooltip
+                  cursor={false}
+                  accessibilityLayer={true}
+                  content={<ChartTooltipContent className="min-w-[10rem]" hideLabel />}
+                />
+                <Bar dataKey="income" fill="var(--color-income)" radius={8} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -281,24 +281,24 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={totalHiresChartConfig} >
-             <BarChart accessibilityLayer data={totalHiresData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-           
-            <ChartTooltip
-              cursor={false}
-              accessibilityLayer={true}
-              content={<ChartTooltipContent className="min-w-[10rem]" hideLabel />}
-            />
-            <Bar dataKey="count" fill="var(--color-count)" radius={8} />
-          </BarChart>
-          </ChartContainer>
+              <BarChart accessibilityLayer data={totalHiresData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+
+                <ChartTooltip
+                  cursor={false}
+                  accessibilityLayer={true}
+                  content={<ChartTooltipContent className="min-w-[10rem]" hideLabel />}
+                />
+                <Bar dataKey="count" fill="var(--color-count)" radius={8} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -308,30 +308,30 @@ export default function Dashboard() {
             <CardTitle>Top Performed Drivers</CardTitle>
           </CardHeader>
           <CardContent>
-                    <ChartContainer config={topDriversChartConfig}>
-          <BarChart
-            accessibilityLayer
-            data={topDriversData}
-            layout="vertical"
-            margin={{
-              left: 30,
-            }}
-          >
-            <XAxis type="number" dataKey="count" hide />
-            <YAxis
-              dataKey="name"
-              type="category"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Bar dataKey="count" fill="var(--color-count)" radius={5} />
-          </BarChart>
-        </ChartContainer>
+            <ChartContainer config={topDriversChartConfig}>
+              <BarChart
+                accessibilityLayer
+                data={topDriversData}
+                layout="vertical"
+                margin={{
+                  left: 30,
+                }}
+              >
+                <XAxis type="number" dataKey="count" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Bar dataKey="count" fill="var(--color-count)" radius={5} />
+              </BarChart>
+            </ChartContainer>
 
           </CardContent>
         </Card>
@@ -342,24 +342,24 @@ export default function Dashboard() {
             <CardTitle>Vehicles by Categories</CardTitle>
           </CardHeader>
           <CardContent>
-             <ChartContainer config={vehicleCategoriesChartConfig}>
-             <BarChart accessibilityLayer data={vehicleCategoriesData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-           
-            <ChartTooltip
-              cursor={false}
-              accessibilityLayer={true}
-              content={<ChartTooltipContent className="min-w-[10rem]" hideLabel />}
-            />
-            <Bar dataKey="count" fill="var(--color-count)" radius={8} />
-          </BarChart>
-          </ChartContainer>
+            <ChartContainer config={vehicleCategoriesChartConfig}>
+              <BarChart accessibilityLayer data={vehicleCategoriesData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                />
+
+                <ChartTooltip
+                  cursor={false}
+                  accessibilityLayer={true}
+                  content={<ChartTooltipContent className="min-w-[10rem]" hideLabel />}
+                />
+                <Bar dataKey="count" fill="var(--color-count)" radius={8} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -373,9 +373,9 @@ export default function Dashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Agent</TableHead>
-                  <TableHead>Count</TableHead>
-                  <TableHead>Total Income</TableHead>
+                  <TableHead className="font-bold text-black">Agent</TableHead>
+                  <TableHead className="font-bold text-black">Count</TableHead>
+                  <TableHead className="font-bold text-black">Total Income</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

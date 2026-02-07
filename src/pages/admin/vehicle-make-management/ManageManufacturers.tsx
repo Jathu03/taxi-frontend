@@ -87,10 +87,10 @@ export default function ManageManufacturers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Manufacturer</TableHead>
-                  <TableHead>Manufacturer Code</TableHead>
-                  <TableHead>Date Modified</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="font-bold text-black">Manufacturer</TableHead>
+                  <TableHead className="font-bold text-black">Manufacturer Code</TableHead>
+                  <TableHead className="font-bold text-black">Date Modified</TableHead>
+                  <TableHead className="font-bold text-black">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
