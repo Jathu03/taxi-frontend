@@ -1,33 +1,24 @@
 "use client";
-import { useMemo, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { EnhancedDataTable } from "@/components/EnhancedDataTable";
+import { ReportPageTemplate } from "@/components/ReportPageTemplate";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  FileSpreadsheet,
-  FileText,
-  Monitor,
   Wifi,
   WifiOff,
-  CalendarCheck2,
-  CalendarX2,
   Truck,
   User,
   Smartphone,
-  Printer,
-  Filter,
-  CheckCircle,
-  XCircle,
   Tablet,
   Radio,
+  CalendarCheck2,
+  CalendarX2,
 } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
-// --- Types ---
+// ============================================
+// TYPE DEFINITION
+// ============================================
 export type Device = {
   id: string;
   deviceId: string;
@@ -40,27 +31,9 @@ export type Device = {
   searchField?: string;
 };
 
-// --- Helper for Logo ---
-const getBase64ImageFromURL = (url: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.setAttribute("crossOrigin", "anonymous");
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      }
-    };
-    img.onerror = (error) => reject(error);
-    img.src = url;
-  });
-};
-
-// --- Mock Data ---
+// ============================================
+// MOCK DATA
+// ============================================
 const mockDevices: Device[] = [
   {
     id: "d1",
@@ -124,8 +97,15 @@ const mockDevices: Device[] = [
   },
 ];
 
-// --- Column Definitions ---
-const columns: ColumnDef<Device>[] = [
+const allDeviceData: Device[] = mockDevices.map((d) => ({
+  ...d,
+  searchField: `${d.deviceId} ${d.driverName} ${d.vehicleReg} ${d.deviceType}`,
+}));
+
+// ============================================
+// TABLE COLUMNS
+// ============================================
+const tableColumns: ColumnDef<Device>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -161,7 +141,7 @@ const columns: ColumnDef<Device>[] = [
       const iconMap: Record<string, ReactNode> = {
         "Mobile - Android": <Smartphone className="h-4 w-4 text-green-600" />,
         "Mobile - iOS": <Smartphone className="h-4 w-4 text-blue-600" />,
-        "Tablet": <Tablet className="h-4 w-4 text-purple-600" />,
+        Tablet: <Tablet className="h-4 w-4 text-purple-600" />,
         "Tracker Unit": <Radio className="h-4 w-4 text-orange-600" />,
       };
       return (
@@ -188,7 +168,9 @@ const columns: ColumnDef<Device>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <Truck className="h-3 w-3 text-green-600" />
-        <span className="font-mono text-sm font-bold">{row.getValue("vehicleReg")}</span>
+        <span className="font-mono text-sm font-bold">
+          {row.getValue("vehicleReg")}
+        </span>
       </div>
     ),
   },
@@ -242,264 +224,69 @@ const columns: ColumnDef<Device>[] = [
   },
 ];
 
-// --- Component ---
+// ============================================
+// PDF COLUMNS
+// ============================================
+const pdfColumns = [
+  { header: "Device ID", dataKey: "deviceId" },
+  { header: "Type", dataKey: "deviceType" },
+  { header: "Driver", dataKey: "driverName" },
+  { header: "Vehicle", dataKey: "vehicleReg" },
+  { header: "Status", dataKey: "status" },
+  { header: "Last Active", dataKey: "lastActive" },
+  { header: "Installed", dataKey: "installDate" },
+];
+
+// ============================================
+// CSV COLUMNS
+// ============================================
+const csvColumns = [
+  { header: "Device ID", dataKey: "deviceId" },
+  { header: "Device Type", dataKey: "deviceType" },
+  { header: "Driver", dataKey: "driverName" },
+  { header: "Vehicle", dataKey: "vehicleReg" },
+  { header: "Status", dataKey: "status" },
+  { header: "Last Active", dataKey: "lastActive" },
+  { header: "Install Date", dataKey: "installDate" },
+];
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
 export default function DeviceDetailsReport() {
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [deviceTypeFilter, setDeviceTypeFilter] = useState<"all" | "Mobile - Android" | "Mobile - iOS" | "Tablet" | "Tracker Unit">("all");
-
-  const allData = useMemo(
-    () =>
-      mockDevices.map((d) => ({
-        ...d,
-        searchField: `${d.deviceId} ${d.driverName} ${d.vehicleReg} ${d.deviceType}`,
-      })),
-    []
-  );
-
-  const filteredData = useMemo(() => {
-    let result = [...allData];
-
-    // Status filter
-    if (statusFilter === "active") {
-      result = result.filter((item) => item.status === "Active");
-    } else if (statusFilter === "inactive") {
-      result = result.filter((item) => item.status === "Inactive");
-    }
-
-    // Device Type filter
-    if (deviceTypeFilter !== "all") {
-      result = result.filter((item) => item.deviceType === deviceTypeFilter);
-    }
-
-    return result;
-  }, [statusFilter, deviceTypeFilter, allData]);
-
-  // --- PDF & Print Logic ---
-  const generateReport = async (action: "save" | "print") => {
-    const doc = new jsPDF({ orientation: "landscape" });
-
-    // 1. Add Logo
-    try {
-      const logoData = await getBase64ImageFromURL("/logo.png");
-      doc.addImage(logoData, "PNG", 14, 10, 20, 20);
-    } catch (e) {
-      console.error("Logo missing", e);
-    }
-
-    // 2. Main Title
-    doc.setFontSize(22);
-    doc.setTextColor(99, 48, 184); // Purple
-    doc.text("Device Details Audit Report", 40, 22);
-
-    // 3. Metadata
-    doc.setFontSize(9);
-    doc.setTextColor(100);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 28);
-
-    // 4. --- APPLIED FILTERS SECTION ---
-    doc.setDrawColor(200);
-    doc.line(14, 35, 283, 35); // Horizontal line
-
-    doc.setFontSize(10);
-    doc.setTextColor(0);
-    doc.setFont("helvetica", "bold");
-    doc.text("Applied Report Filters:", 14, 42);
-
-    doc.setFont("helvetica", "normal");
-    const statusText =
-      statusFilter === "all"
-        ? "All Statuses"
-        : statusFilter === "active"
-        ? "Active Only"
-        : "Inactive Only";
-    const deviceTypeText = deviceTypeFilter === "all" ? "All Device Types" : deviceTypeFilter;
-
-    doc.text(`Status Filter: ${statusText}`, 14, 48);
-    doc.text(`Device Type Filter: ${deviceTypeText}`, 14, 53);
-    doc.text(`Total Records in Database: ${allData.length}`, 14, 58);
-    doc.text(`Filtered Records: ${filteredData.length}`, 14, 63);
-
-    // 5. Table
-    autoTable(doc, {
-      head: [["Device ID", "Type", "Driver", "Vehicle", "Status", "Last Active", "Installed"]],
-      body: filteredData.map((d) => [
-        d.deviceId,
-        d.deviceType,
-        d.driverName,
-        d.vehicleReg,
-        d.status,
-        d.lastActive,
-        d.installDate,
-      ]),
-      startY: 70,
-      headStyles: { fillColor: [99, 48, 184], textColor: [255, 255, 255] },
-      styles: { fontSize: 8 },
-      margin: { left: 14, right: 14 },
-    });
-
-    if (action === "save") {
-      doc.save(`DeviceReport_${statusFilter}_${deviceTypeFilter.replace(/\s/g, "-")}_${new Date().getTime()}.pdf`);
-    } else {
-      doc.autoPrint();
-      window.open(doc.output("bloburl"), "_blank");
-    }
-  };
-
-  // Export CSV
-  const exportCSV = () => {
-    const headers = ["Device ID", "Device Type", "Driver", "Vehicle", "Status", "Last Active", "Install Date"];
-    const rows = filteredData.map((d) =>
-      [d.deviceId, d.deviceType, d.driverName, d.vehicleReg, d.status, d.lastActive, d.installDate]
-        .map((cell) => `"${cell}"`)
-        .join(",")
-    );
-
-    const csvContent = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `DeviceReport_${statusFilter}_${deviceTypeFilter.replace(/\s/g, "-")}_${new Date().getTime()}.csv`;
-    link.click();
-  };
-
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-white via-blue-50/30 to-slate-50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-purple-700">Device Details Report</h1>
-          <p className="text-muted-foreground mt-1">
-            Viewing {filteredData.length} records
-            {(statusFilter !== "all" || deviceTypeFilter !== "all") &&
-              ` (filtered by ${statusFilter !== "all" ? statusFilter : ""} ${
-                deviceTypeFilter !== "all" ? deviceTypeFilter : ""
-              })`}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={exportCSV}
-            className="border-green-600 text-green-700 hover:bg-green-50"
-          >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> CSV
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => generateReport("print")}
-            className="border-purple-600 text-purple-700 hover:bg-purple-50"
-          >
-            <Printer className="mr-2 h-4 w-4" /> Print
-          </Button>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => generateReport("save")}
-          >
-            <FileText className="mr-2 h-4 w-4" /> PDF Report
-          </Button>
-        </div>
-      </div>
-
-      {/* Filter Buttons */}
-      <div className="space-y-3">
-        {/* Status Filters */}
-        <div className="flex flex-wrap gap-2">
-          <span className="text-sm font-medium text-gray-600 flex items-center mr-2">
-            <Filter className="h-4 w-4 mr-1" /> Status:
-          </span>
-          <Button
-            variant={statusFilter === "all" ? "default" : "outline"}
-            onClick={() => setStatusFilter("all")}
-            className={statusFilter === "all" ? "bg-purple-600" : ""}
-            size="sm"
-          >
-            <Monitor className="mr-2 h-4 w-4" /> All Devices
-          </Button>
-          <Button
-            variant={statusFilter === "active" ? "default" : "outline"}
-            onClick={() => setStatusFilter("active")}
-            className={statusFilter === "active" ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-            size="sm"
-          >
-            <CheckCircle className="mr-2 h-4 w-4" /> Active Only
-          </Button>
-          <Button
-            variant={statusFilter === "inactive" ? "default" : "outline"}
-            onClick={() => setStatusFilter("inactive")}
-            className={statusFilter === "inactive" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
-            size="sm"
-          >
-            <XCircle className="mr-2 h-4 w-4" /> Inactive Only
-          </Button>
-        </div>
-
-        {/* Device Type Filters */}
-        <div className="flex flex-wrap gap-2">
-          <span className="text-sm font-medium text-gray-600 flex items-center mr-2">
-            <Smartphone className="h-4 w-4 mr-1" /> Device Type:
-          </span>
-          <Button
-            variant={deviceTypeFilter === "all" ? "default" : "outline"}
-            onClick={() => setDeviceTypeFilter("all")}
-            className={deviceTypeFilter === "all" ? "bg-purple-600" : ""}
-            size="sm"
-          >
-            All Types
-          </Button>
-          <Button
-            variant={deviceTypeFilter === "Mobile - Android" ? "default" : "outline"}
-            onClick={() => setDeviceTypeFilter("Mobile - Android")}
-            className={deviceTypeFilter === "Mobile - Android" ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-            size="sm"
-          >
-            <Smartphone className="mr-2 h-4 w-4" /> Android
-          </Button>
-          <Button
-            variant={deviceTypeFilter === "Mobile - iOS" ? "default" : "outline"}
-            onClick={() => setDeviceTypeFilter("Mobile - iOS")}
-            className={deviceTypeFilter === "Mobile - iOS" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
-            size="sm"
-          >
-            <Smartphone className="mr-2 h-4 w-4" /> iOS
-          </Button>
-          <Button
-            variant={deviceTypeFilter === "Tablet" ? "default" : "outline"}
-            onClick={() => setDeviceTypeFilter("Tablet")}
-            className={deviceTypeFilter === "Tablet" ? "bg-purple-600 hover:bg-purple-700 text-white" : ""}
-            size="sm"
-          >
-            <Tablet className="mr-2 h-4 w-4" /> Tablet
-          </Button>
-          <Button
-            variant={deviceTypeFilter === "Tracker Unit" ? "default" : "outline"}
-            onClick={() => setDeviceTypeFilter("Tracker Unit")}
-            className={deviceTypeFilter === "Tracker Unit" ? "bg-orange-600 hover:bg-orange-700 text-white" : ""}
-            size="sm"
-          >
-            <Radio className="mr-2 h-4 w-4" /> Tracker
-          </Button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between border-b">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Monitor className="h-5 w-5 text-purple-600" />
-            Device Registry
-          </CardTitle>
-          <Badge variant="outline">Fleet Management</Badge>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <EnhancedDataTable
-            key={`${statusFilter}-${deviceTypeFilter}`}
-            columns={columns}
-            data={filteredData}
-            searchKey="searchField"
-            searchPlaceholder="Search by device ID, driver, or vehicle..."
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <ReportPageTemplate
+      title="Device Details Audit Report"
+      data={allDeviceData}
+      tableColumns={tableColumns}
+      pdfColumns={pdfColumns}
+      csvColumns={csvColumns}
+      searchKey="searchField"
+      fileName="DeviceReport.pdf"
+      filters={[
+        {
+          key: "status",
+          label: "Status",
+          options: [
+            { label: "All Devices", value: "all" },
+            { label: "Active Only", value: "Active" },
+            { label: "Inactive Only", value: "Inactive" },
+          ],
+          defaultValue: "all",
+        },
+        {
+          key: "deviceType",
+          label: "Device Type",
+          options: [
+            { label: "All Types", value: "all" },
+            { label: "Android", value: "Mobile - Android" },
+            { label: "iOS", value: "Mobile - iOS" },
+            { label: "Tablet", value: "Tablet" },
+            { label: "Tracker", value: "Tracker Unit" },
+          ],
+          defaultValue: "all",
+        },
+      ]}
+    />
   );
 }
