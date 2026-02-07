@@ -3,7 +3,6 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/DataTableLayout";
 import { Button } from "@/components/ui/button";
 import { Send, Trash, Edit } from "lucide-react"; // Removed MoreHorizontal
-// Removed DropdownMenu imports
 import { useDataTable } from "@/hooks/useDataTable";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +29,7 @@ const columns = (
   navigate: ReturnType<typeof useNavigate>
 ): ColumnDef<PendingBooking>[] => [
   { 
+
     accessorKey: "bookingNumber", 
     header: () => <span className="font-bold text-black">Booking #</span>,
     cell: ({ row }) => {

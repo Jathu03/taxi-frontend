@@ -189,20 +189,9 @@ const tableColumns: ColumnDef<FareScheme>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Scheme Name", dataKey: "schemeName" },
-  { header: "Vehicle Class", dataKey: "vehicleClass" },
-  { header: "Base Fare", dataKey: "baseFare" },
-  { header: "Per KM", dataKey: "perKm" },
-  { header: "Per Min", dataKey: "perMin" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Scheme Name", dataKey: "schemeName" },
   { header: "Vehicle Class", dataKey: "vehicleClass" },
   {
@@ -313,8 +302,7 @@ export default function FareSchemeReport() {
         title="Fare Scheme Audit Report"
         data={allFareData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="FareSchemeReport.pdf"
         filters={[

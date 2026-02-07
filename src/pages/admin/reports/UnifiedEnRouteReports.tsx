@@ -348,29 +348,15 @@ const tableColumns: ColumnDef<EnRouteBooking>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
+const exportColumns = [
   { header: "Booking ID", dataKey: "refNumber" },
   { header: "Customer", dataKey: "customer" },
   { header: "Driver", dataKey: "driver" },
   { header: "Vehicle Type", dataKey: "vehicleType" },
   { header: "Vehicle #", dataKey: "vehicle" },
   { header: "Pickup", dataKey: "pickup" },
-  { header: "Current Location", dataKey: "currentLocation" },
-  { header: "ETA", dataKey: "eta" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
-  { header: "Booking ID", dataKey: "refNumber" },
-  { header: "Customer", dataKey: "customer" },
-  { header: "Driver", dataKey: "driver" },
-  { header: "Vehicle Type", dataKey: "vehicleType" },
-  { header: "Vehicle #", dataKey: "vehicle" },
-  { header: "Pickup Address", dataKey: "pickup" },
   { header: "Current Location", dataKey: "currentLocation" },
   { header: "ETA", dataKey: "eta" },
 ];
@@ -505,8 +491,7 @@ export default function EnRouteBookingsReport() {
         title="EnRoute Bookings Audit Report"
         data={allEnRouteData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="customer"
         fileName="EnRouteBookings.pdf"
         filters={[

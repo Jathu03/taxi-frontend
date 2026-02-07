@@ -316,20 +316,20 @@ const tableColumns: ColumnDef<WaitingBooking>[] = [
     header: () => <span className="font-bold text-black">Urgency</span>,
     cell: ({ row }) => {
       const urgency = row.getValue("urgencyLevel") as string;
-      
+
       // FIX: Removed explicit type annotation that caused error
       const icons = {
         normal: <CheckCircle className="h-3 w-3 mr-1" />,
         near: <Clock className="h-3 w-3 mr-1" />,
         urgent: <AlertTriangle className="h-3 w-3 mr-1" />,
       };
-      
+
       const labels: Record<string, string> = {
         normal: "Normal",
         near: "Near Urgent",
         urgent: "Urgent",
       };
-      
+
       return (
         <Badge variant="outline" className={getUrgencyBadgeClass(urgency)}>
           {/* @ts-ignore */}
@@ -342,9 +342,9 @@ const tableColumns: ColumnDef<WaitingBooking>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
+const exportColumns = [
   { header: "Booking ID", dataKey: "refNumber" },
   { header: "Customer", dataKey: "customer" },
   { header: "Phone", dataKey: "phone" },
@@ -356,11 +356,6 @@ const pdfColumns = [
   { header: "Waiting", dataKey: "waiting" },
   { header: "Urgency", dataKey: "urgencyDisplay" },
 ];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = pdfColumns;
 
 // ============================================
 // STATISTICS COMPONENT
@@ -501,8 +496,7 @@ export default function UnifiedWaitingReports() {
         title="Driver Waiting Bookings Report"
         data={allWaitingData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="WaitingBookingsReport.pdf"
         filters={[

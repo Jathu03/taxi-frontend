@@ -242,33 +242,21 @@ const tableColumns: ColumnDef<VehicleClass>[] = [
 // ============================================
 // PDF COLUMNS
 // ============================================
-const pdfColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Class", dataKey: "className" },
   { header: "Code", dataKey: "classCode" },
-  { header: "In App", dataKey: "showInApp" },
-  { header: "Fare", dataKey: "fareScheme" },
-  { header: "Corporate", dataKey: "corporateFareScheme" },
-  { header: "RoadTrip", dataKey: "roadTripFareScheme" },
-  { header: "App Fare", dataKey: "appFareScheme" },
-  { header: "Commission", dataKey: "commission" },
-  { header: "Status", dataKey: "status" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
-  { header: "Class Name", dataKey: "className" },
-  { header: "Class Code", dataKey: "classCode" },
   {
     header: "Show in App",
     dataKey: "showInApp",
     formatter: (value: boolean) => (value ? "Yes" : "No"),
   },
-  { header: "Fare Scheme", dataKey: "fareScheme" },
-  { header: "Corporate Fare Scheme", dataKey: "corporateFareScheme" },
-  { header: "RoadTrip Fare Scheme", dataKey: "roadTripFareScheme" },
-  { header: "App Fare Scheme", dataKey: "appFareScheme" },
+  { header: "Fare", dataKey: "fareScheme" },
+  { header: "Corporate", dataKey: "corporateFareScheme" },
+  { header: "RoadTrip", dataKey: "roadTripFareScheme" },
+  { header: "App Fare", dataKey: "appFareScheme" },
   {
     header: "Commission",
     dataKey: "commission",
@@ -285,9 +273,9 @@ function VehicleClassStatistics() {
     const avgCommission =
       allVehicleClassData.length > 0
         ? Math.round(
-            allVehicleClassData.reduce((sum, v) => sum + v.commission, 0) /
-              allVehicleClassData.length
-          )
+          allVehicleClassData.reduce((sum, v) => sum + v.commission, 0) /
+          allVehicleClassData.length
+        )
         : 0;
 
     return {
@@ -361,8 +349,7 @@ export default function VehicleClassReport() {
         title="Vehicle Class Audit Report"
         data={allVehicleClassData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="VehicleClassReport.pdf"
         filters={[

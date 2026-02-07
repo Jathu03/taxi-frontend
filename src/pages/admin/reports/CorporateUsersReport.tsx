@@ -174,22 +174,9 @@ const tableColumns: ColumnDef<CorporateUser>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS (For PDF Export)
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Username", dataKey: "username" },
-  { header: "Email", dataKey: "email" },
-  { header: "First Name", dataKey: "firstName" },
-  { header: "Last Name", dataKey: "lastName" },
-  { header: "Phone", dataKey: "phoneNumber" },
-  { header: "Role", dataKey: "role" },
-  { header: "Status", dataKey: "status" },
-];
-
-// ============================================
-// CSV COLUMNS (For CSV Export - More Detailed)
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Username", dataKey: "username" },
   { header: "Email", dataKey: "email" },
   { header: "First Name", dataKey: "firstName" },
@@ -208,8 +195,7 @@ export default function CorporateUserReport() {
       title="Corporate Users Audit Report"
       data={allUserData}
       tableColumns={tableColumns}
-      pdfColumns={pdfColumns}
-      csvColumns={csvColumns}
+      exportColumns={exportColumns}
       searchKey="searchField"
       fileName="CorporateUsers.pdf"
       filters={[

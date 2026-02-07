@@ -180,7 +180,10 @@ const tableColumns: ColumnDef<Vehicle>[] = [
 // ============================================
 // PDF COLUMNS
 // ============================================
-const pdfColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Reg No", dataKey: "registrationNo" },
   { header: "Code", dataKey: "code" },
   { header: "Class", dataKey: "vehicleClass" },
@@ -190,11 +193,6 @@ const pdfColumns = [
   { header: "License Expiry", dataKey: "licenseExpiry" },
   { header: "Insurance Status", dataKey: "insuranceStatus" },
 ];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = pdfColumns;
 
 // ============================================
 // STATISTICS COMPONENT
@@ -288,8 +286,7 @@ export default function VehicleReport() {
         title="Vehicle Report"
         data={allVehicleData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="VehicleReport.pdf"
         filters={[

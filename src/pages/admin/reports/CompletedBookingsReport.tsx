@@ -40,21 +40,21 @@ export type CompletedBooking = {
 // MOCK DATA
 // ============================================
 const rawData = [
-  { 
-    id: "c1", 
-    booking: "295001", 
-    voucher: "V-102", 
-    org: "Corporate Alpha", 
-    customer: "Ms. Shiromi", 
-    passenger: "Jane Doe", 
-    hireType: "Point-to-Point", 
-    bookingTime: "10:00 AM", 
-    pickupAddress: "Nawala", 
-    totalDistance: "12.5 km", 
-    totalFare: "1,250.00", 
-    driver: "Sunil Silva", 
-    vehicle: "CAB-1234", 
-    vehicleClass: "Bus", 
+  {
+    id: "c1",
+    booking: "295001",
+    voucher: "V-102",
+    org: "Corporate Alpha",
+    customer: "Ms. Shiromi",
+    passenger: "Jane Doe",
+    hireType: "Point-to-Point",
+    bookingTime: "10:00 AM",
+    pickupAddress: "Nawala",
+    totalDistance: "12.5 km",
+    totalFare: "1,250.00",
+    driver: "Sunil Silva",
+    vehicle: "CAB-1234",
+    vehicleClass: "Bus",
     completedTime: "10:45 AM",
     bookedBy: "Admin",
     pickupTime: "10:15 AM",
@@ -67,21 +67,21 @@ const rawData = [
     testBooking: "No",
     fareScheme: "Standard"
   },
-  { 
-    id: "ct1", 
-    booking: "TUK-C001", 
-    voucher: "N/A", 
-    org: "Personal", 
-    customer: "John Silva", 
-    passenger: "John Silva", 
-    hireType: "Budget", 
-    bookingTime: "11:00 AM", 
-    pickupAddress: "Pettah", 
-    totalDistance: "4.2 km", 
-    totalFare: "450.00", 
-    driver: "Ranjith Tuk", 
-    vehicle: "TUK-111", 
-    vehicleType: "Tuk", 
+  {
+    id: "ct1",
+    booking: "TUK-C001",
+    voucher: "N/A",
+    org: "Personal",
+    customer: "John Silva",
+    passenger: "John Silva",
+    hireType: "Budget",
+    bookingTime: "11:00 AM",
+    pickupAddress: "Pettah",
+    totalDistance: "4.2 km",
+    totalFare: "450.00",
+    driver: "Ranjith Tuk",
+    vehicle: "TUK-111",
+    vehicleType: "Tuk",
     completedTime: "11:35 AM",
     bookedBy: "App User",
     pickupTime: "11:10 AM",
@@ -180,23 +180,9 @@ const tableColumns: ColumnDef<CompletedBooking>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS (For PDF Export)
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Booking", dataKey: "booking" },
-  { header: "Customer", dataKey: "customer" },
-  { header: "Pickup Address", dataKey: "pickupAddress" },
-  { header: "End Time", dataKey: "completedTime" },
-  { header: "Distance", dataKey: "totalDistance" },
-  { header: "Fare", dataKey: "totalFare" },
-  { header: "Driver", dataKey: "driver" },
-  { header: "Vehicle", dataKey: "vehicle" },
-];
-
-// ============================================
-// CSV COLUMNS (For CSV Export - More Detailed)
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Booking", dataKey: "booking" },
   { header: "Voucher", dataKey: "voucher" },
   { header: "Organization", dataKey: "org" },
@@ -229,8 +215,7 @@ export default function CompletedBookingsReport() {
       title="Completed Bookings Audit Report"
       data={allCompletedData}
       tableColumns={tableColumns}
-      pdfColumns={pdfColumns}
-      csvColumns={csvColumns}
+      exportColumns={exportColumns}
       searchKey="customer"
       fileName="CompletedBookings.pdf"
       filters={[

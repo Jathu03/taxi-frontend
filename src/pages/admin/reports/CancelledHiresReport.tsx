@@ -41,18 +41,10 @@ const tableColumns: ColumnDef<CancelledBooking>[] = [
   { accessorKey: "vehicle", header: "Vehicle" },
 ];
 
-const pdfColumns = [
-  { header: "Booking #", dataKey: "bookingNumber" },
-  { header: "Org", dataKey: "org" },
-  { header: "Customer", dataKey: "customer" },
-  { header: "Cancelled Type", dataKey: "cancelledType" },
-  { header: "Driver", dataKey: "driver" },
-  { header: "Vehicle", dataKey: "vehicle" },
-  { header: "Hire Type", dataKey: "hireType" },
-];
-
-// Optional: Define custom CSV columns with formatters
-const csvColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Booking Number", dataKey: "bookingNumber" },
   { header: "Organization", dataKey: "org" },
   { header: "Customer Name", dataKey: "customer" },
@@ -73,8 +65,7 @@ export default function CancelledHiresReport() {
       title="Cancelled Hires Audit Report"
       data={allCancelledData}
       tableColumns={tableColumns}
-      pdfColumns={pdfColumns}
-      csvColumns={csvColumns} // More detailed CSV export
+      exportColumns={exportColumns}
       searchKey="customer"
       fileName="CancelledHires.csv" // Extension will be auto-adjusted
       filters={[

@@ -183,11 +183,10 @@ const tableColumns: ColumnDef<Device>[] = [
       return (
         <Badge
           variant="outline"
-          className={`${
-            isActive
+          className={`${isActive
               ? "bg-green-100 text-green-700 border-green-300"
               : "bg-gray-100 text-gray-700 border-gray-300"
-          }`}
+            }`}
         >
           {isActive ? (
             <span className="flex items-center gap-1">
@@ -225,9 +224,9 @@ const tableColumns: ColumnDef<Device>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
+const exportColumns = [
   { header: "Device ID", dataKey: "deviceId" },
   { header: "Type", dataKey: "deviceType" },
   { header: "Driver", dataKey: "driverName" },
@@ -235,19 +234,6 @@ const pdfColumns = [
   { header: "Status", dataKey: "status" },
   { header: "Last Active", dataKey: "lastActive" },
   { header: "Installed", dataKey: "installDate" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
-  { header: "Device ID", dataKey: "deviceId" },
-  { header: "Device Type", dataKey: "deviceType" },
-  { header: "Driver", dataKey: "driverName" },
-  { header: "Vehicle", dataKey: "vehicleReg" },
-  { header: "Status", dataKey: "status" },
-  { header: "Last Active", dataKey: "lastActive" },
-  { header: "Install Date", dataKey: "installDate" },
 ];
 
 // ============================================
@@ -259,8 +245,7 @@ export default function DeviceDetailsReport() {
       title="Device Details Audit Report"
       data={allDeviceData}
       tableColumns={tableColumns}
-      pdfColumns={pdfColumns}
-      csvColumns={csvColumns}
+      exportColumns={exportColumns}
       searchKey="searchField"
       fileName="DeviceReport.pdf"
       filters={[

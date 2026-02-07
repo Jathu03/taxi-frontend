@@ -1,13 +1,12 @@
 "use client";
-import { useState, useMemo} from "react";
+import { useState, useMemo } from "react";
 import type { ReactNode } from 'react';
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { FileText, Printer, FileSpreadsheet } from "lucide-react";
 import { useReportExport } from "@/hooks/useReportExport";
-import { type PDFColumn } from "@/lib/pdfReportGenerator";
-import { type CSVColumn } from "@/lib/csvExportGenerator";
+import { type ReportColumn } from "@/types/reports";
 
 export type ReportFilter<T> = {
   key: keyof T;
@@ -20,14 +19,14 @@ export type ReportConfig<T> = {
   title: string;
   data: T[];
   tableColumns: ColumnDef<T>[];
-  pdfColumns: PDFColumn[];
-  csvColumns?: CSVColumn<T>[]; // Optional, will use pdfColumns if not provided
+  exportColumns: ReportColumn[];
   searchKey: keyof T;
   filters?: ReportFilter<T>[];
   additionalActions?: ReactNode;
   fileName: string;
   enableCSV?: boolean; // Default true
   enablePDF?: boolean; // Default true
+  enableExcel?: boolean; // Default true
   enablePrint?: boolean; // Default true
 };
 
@@ -35,17 +34,17 @@ export function ReportPageTemplate<T extends Record<string, any>>({
   title,
   data,
   tableColumns,
-  pdfColumns,
-  csvColumns,
+  exportColumns,
   searchKey,
   filters = [],
   additionalActions,
   fileName,
   enableCSV = true,
   enablePDF = true,
+  enableExcel = true,
   enablePrint = true,
 }: ReportConfig<T>) {
-  const { generatePDFReport, generateCSVReport } = useReportExport();
+  const { generatePDFReport, generateCSVReport, generateExcelReport } = useReportExport();
 
   // Dynamic filter state
   const [filterValues, setFilterValues] = useState<Record<string, string>>(
@@ -85,7 +84,7 @@ export function ReportPageTemplate<T extends Record<string, any>>({
         orientation: "landscape",
         logoUrl: "/logo.png",
         filterTags: getFilterTags(),
-        columns: pdfColumns,
+        columns: exportColumns,
         data: filteredData,
         fileName: fileName.replace(/\.[^/.]+$/, ".pdf"),
         showMetadata: true,
@@ -95,18 +94,20 @@ export function ReportPageTemplate<T extends Record<string, any>>({
   };
 
   const handleGenerateCSV = () => {
-    // Use csvColumns if provided, otherwise convert pdfColumns to csvColumns
-    const columns = csvColumns || pdfColumns.map(col => ({
-      header: col.header,
-      dataKey: col.dataKey,
-    }));
-
     generateCSVReport({
-      columns,
+      columns: exportColumns,
       data: filteredData,
       fileName: fileName.replace(/\.[^/.]+$/, ".csv"),
       includeHeaders: true,
     });
+  };
+
+  const handleGenerateExcel = () => {
+    generateExcelReport(
+      filteredData,
+      exportColumns,
+      fileName.replace(/\.[^/.]+$/, ".xlsx")
+    );
   };
 
   return (
@@ -116,22 +117,28 @@ export function ReportPageTemplate<T extends Record<string, any>>({
         <h1 className="text-3xl font-bold">{title}</h1>
         <div className="flex gap-2">
           {additionalActions}
-          
+
           {enableCSV && (
-            <Button onClick={handleGenerateCSV} variant="outline">
-              <FileSpreadsheet className="mr-2 h-4 w-4" /> Export CSV
+            <Button onClick={handleGenerateCSV} variant="outline" className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" /> Export CSV
             </Button>
           )}
-          
+
+          {enableExcel && (
+            <Button onClick={handleGenerateExcel} variant="outline" className="gap-2 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
+              <FileSpreadsheet className="h-4 w-4" /> Export Excel
+            </Button>
+          )}
+
           {enablePDF && (
-            <Button onClick={() => handleGeneratePDF("save")}>
-              <FileText className="mr-2 h-4 w-4" /> PDF
+            <Button onClick={() => handleGeneratePDF("save")} className="gap-2">
+              <FileText className="h-4 w-4" /> PDF
             </Button>
           )}
-          
+
           {enablePrint && (
-            <Button onClick={() => handleGeneratePDF("print")} variant="outline">
-              <Printer className="mr-2 h-4 w-4" /> Print
+            <Button onClick={() => handleGeneratePDF("print")} variant="outline" className="gap-2">
+              <Printer className="h-4 w-4" /> Print
             </Button>
           )}
         </div>

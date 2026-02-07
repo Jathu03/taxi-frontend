@@ -311,7 +311,10 @@ const tableColumns: ColumnDef<Driver>[] = [
 // ============================================
 // PDF COLUMNS
 // ============================================
-const pdfColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Code", dataKey: "code" },
   { header: "First Name", dataKey: "firstName" },
   { header: "Last Name", dataKey: "lastName" },
@@ -319,29 +322,13 @@ const pdfColumns = [
   { header: "Contact", dataKey: "contactNumber" },
   { header: "Emergency", dataKey: "emergencyContactNumber" },
   { header: "Manual", dataKey: "manualDispatch" },
-  { header: "Status", dataKey: "blocked" },
-  { header: "Location", dataKey: "lastLocation" },
-  { header: "App Ver", dataKey: "appVersion" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
-  { header: "Code", dataKey: "code" },
-  { header: "First Name", dataKey: "firstName" },
-  { header: "Last Name", dataKey: "lastName" },
-  { header: "NIC", dataKey: "nic" },
-  { header: "Contact Number", dataKey: "contactNumber" },
-  { header: "Emergency Contact", dataKey: "emergencyContactNumber" },
-  { header: "Manual Dispatch", dataKey: "manualDispatch" },
   {
-    header: "Blocked",
+    header: "Status",
     dataKey: "blocked",
     formatter: (value: string) => (value === "Yes" ? "Blocked" : "Active"),
   },
-  { header: "Last Location", dataKey: "lastLocation" },
-  { header: "App Version", dataKey: "appVersion" },
+  { header: "Location", dataKey: "lastLocation" },
+  { header: "App Ver", dataKey: "appVersion" },
 ];
 
 // ============================================
@@ -422,8 +409,7 @@ export default function DriverReport() {
         title="Driver Registry Audit Report"
         data={allDriverData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="fullName"
         fileName="DriverReport.pdf"
         filters={[

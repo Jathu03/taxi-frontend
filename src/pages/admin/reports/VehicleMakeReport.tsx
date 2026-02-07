@@ -130,17 +130,15 @@ const tableColumns: ColumnDef<VehicleMake>[] = [
 // ============================================
 // PDF COLUMNS
 // ============================================
-const pdfColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Manufacturer", dataKey: "manufacturer" },
   { header: "Code", dataKey: "code" },
   { header: "Status", dataKey: "status" },
   { header: "Date Modified", dataKey: "dateModified" },
 ];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = pdfColumns;
 
 // ============================================
 // STATISTICS COMPONENT
@@ -204,8 +202,7 @@ export default function VehicleMakeReport() {
         title="Vehicle Make Report"
         data={allMakeData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="VehicleMakeReport.pdf"
         filters={[

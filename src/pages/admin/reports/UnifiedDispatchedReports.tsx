@@ -371,13 +371,12 @@ const tableColumns: ColumnDef<DispatchedBooking>[] = [
         return (
           <Badge
             variant="outline"
-            className={`gap-1 ${
-              isTuk
+            className={`gap-1 ${isTuk
                 ? "border-yellow-500 text-yellow-700 bg-yellow-50"
                 : platform === "iOS"
-                ? "border-gray-500 text-gray-700 bg-gray-50"
-                : "border-green-600 text-green-700 bg-green-50"
-            }`}
+                  ? "border-gray-500 text-gray-700 bg-gray-50"
+                  : "border-green-600 text-green-700 bg-green-50"
+              }`}
           >
             {isTuk ? (
               <Car className="h-3 w-3" />
@@ -391,11 +390,10 @@ const tableColumns: ColumnDef<DispatchedBooking>[] = [
       return (
         <Badge
           variant="outline"
-          className={`gap-1 ${
-            isTuk
+          className={`gap-1 ${isTuk
               ? "border-yellow-500 text-yellow-700 bg-yellow-50"
               : "border-blue-500 text-blue-700 bg-blue-50"
-          }`}
+            }`}
         >
           {isTuk ? <Car className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
           {isTuk ? "Tuk (Manual)" : "Manual/Portal"}
@@ -480,25 +478,9 @@ const tableColumns: ColumnDef<DispatchedBooking>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Ref ID", dataKey: "refNumber" },
-  { header: "Source", dataKey: "source" },
-  { header: "Customer", dataKey: "customer" },
-  { header: "Contact", dataKey: "contact" },
-  { header: "Pickup Time", dataKey: "pickupTime" },
-  { header: "Dispatched By", dataKey: "dispatchedBy" },
-  { header: "Dispatched Time", dataKey: "dispatchedTime" },
-  { header: "Driver", dataKey: "driver" },
-  { header: "Vehicle Type", dataKey: "vehicleType" },
-  { header: "Vehicle #", dataKey: "vehicle" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Ref ID", dataKey: "refNumber" },
   {
     header: "Source",
@@ -668,8 +650,7 @@ export default function DispatchedBookingsReport() {
         title="Dispatched Bookings Audit Report"
         data={allDispatchedData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="customer"
         fileName="DispatchedBookings.pdf"
         filters={[

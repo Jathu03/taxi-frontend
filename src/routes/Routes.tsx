@@ -8,6 +8,7 @@ import Unauthorized from "@/pages/Unauthorized";
 import Configuration from "@/pages/admin/home/Configuration";
 import DriverDashboard from "@/pages/admin/home/DriverDashboard";
 import CityView from "@/pages/admin/home/CityView";
+import Settings from "@/pages/admin/home/Settings";
 
 // Bookings
 import AddBooking from "@/pages/admin/bookings/AddBooking";
@@ -160,6 +161,7 @@ export const router = createBrowserRouter([
           { path: "configuration", element: <Configuration /> },
           { path: "driver-dashboard", element: <DriverDashboard /> },
           { path: "city-view", element: <CityView /> },
+          { path: "settings", element: <Settings /> },
 
           // Bookings
           { path: "bookings/add", element: <AddBooking /> },
@@ -274,12 +276,12 @@ export const router = createBrowserRouter([
           { path: "/admin/reports/vehicle-make-details", element: <VehicleMakeReport /> },
           { path: "/admin/reports/vehicle-class-details", element: <VehicleClassReport /> },
           { path: "/admin/reports/vehicle-owner-details", element: <VehicleOwnerReport /> },
-          { path: "/admin/reports/fare-scheme-details", element: <FareSchemeReport /> }, 
+          { path: "/admin/reports/fare-scheme-details", element: <FareSchemeReport /> },
           { path: "/admin/reports/corporate-details", element: <CorporateReport /> },
           { path: "/admin/reports/corporate-user-details", element: <CorporateUserReport /> },
           { path: "/admin/reports/user-details", element: <UserReport /> },
           { path: "/admin/reports/promo-code-details", element: <PromoCodeReport /> },
-          { path: "/admin/reports/modification", element: <UnifiedModificationReport />}
+          { path: "/admin/reports/modification", element: <UnifiedModificationReport /> }
         ],
       },
     ],

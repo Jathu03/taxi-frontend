@@ -10,8 +10,10 @@ import {
   CarTaxiFront,
   Building2,
   FileText,
+  ShieldCheck,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 import {
   Sidebar,
@@ -42,6 +44,7 @@ type MenuItem = {
   icon: React.FC<any>;
   isActive?: boolean;
   children?: MenuItem[];
+  allowedRoles?: string[];
 };
 // Menu items.
 const items: MenuItem[] = [
@@ -388,98 +391,141 @@ const items: MenuItem[] = [
     url: "#",
     icon: FileText,
     children: [
-      { title: "Pending Reports", 
+      {
+        title: "Pending Reports",
         url: "/admin/reports/pending",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Dispatched Booking Report", 
-        url: "/admin/reports/dispatched", 
-        icon: FileText 
+      {
+        title: "Dispatched Booking Report",
+        url: "/admin/reports/dispatched",
+        icon: FileText
       },
       {
         title: "Enroute Bookings Report",
         url: "/admin/reports/enroute",
         icon: FileText,
       },
-      { title: "Driver Waiting Booking Report", 
+      {
+        title: "Driver Waiting Booking Report",
         url: "/admin/reports/waiting",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Passenger On Board Report", 
+      {
+        title: "Passenger On Board Report",
         url: "/admin/reports/passenger-on-board",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Completed Bookings Report", 
+      {
+        title: "Completed Bookings Report",
         url: "/admin/reports/completed-bookings",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Modification Details Report", 
+      {
+        title: "Modification Details Report",
         url: "/admin/reports/modification",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Cancelled Bookings Report", 
+      {
+        title: "Cancelled Bookings Report",
         url: "/admin/reports/cancelled-bookings",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Driver Details Report", 
+      {
+        title: "Driver Details Report",
         url: "/admin/reports/driver-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Driver Activity Log Report", 
+      {
+        title: "Driver Activity Log Report",
         url: "/admin/reports/driver-activity-log",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Vehicle Details Report", 
+      {
+        title: "Vehicle Details Report",
         url: "/admin/reports/vehicle-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Device Details Report", 
+      {
+        title: "Device Details Report",
         url: "/admin/reports/device-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Vehicle Model Details Report", 
+      {
+        title: "Vehicle Model Details Report",
         url: "/admin/reports/vehicle-model-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Vehicle Make Details Report", 
+      {
+        title: "Vehicle Make Details Report",
         url: "/admin/reports/vehicle-make-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Vehicle Class Details Report", 
+      {
+        title: "Vehicle Class Details Report",
         url: "/admin/reports/vehicle-class-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Vehicle Owner Details Report", 
+      {
+        title: "Vehicle Owner Details Report",
         url: "/admin/reports/vehicle-owner-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Fare Scheme Details Report", 
+      {
+        title: "Fare Scheme Details Report",
         url: "/admin/reports/fare-scheme-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Corporate Details Report", 
+      {
+        title: "Corporate Details Report",
         url: "/admin/reports/corporate-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Corporate User Details Report", 
+      {
+        title: "Corporate User Details Report",
         url: "/admin/reports/corporate-user-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "User Details Report", 
+      {
+        title: "User Details Report",
         url: "/admin/reports/user-details",
-        icon: FileText 
+        icon: FileText
       },
-      { title: "Promo Code Details Report", 
+      {
+        title: "Promo Code Details Report",
         url: "/admin/reports/promo-code-details",
-        icon: FileText 
+        icon: FileText
       },
-      
+
     ],
+  },
+  {
+    title: "Settings",
+    url: "/admin/settings",
+    icon: Settings,
+    allowedRoles: ["admin"],
   },
 ];
 
 export function AdminSidebar() {
   const location = useLocation();
+  const { user } = useAuth();
+
+  const filteredItems = items.filter((item) => {
+    // Check dynamic permissions from localStorage
+    const savedPermissions = localStorage.getItem("sidebar_permissions");
+    if (savedPermissions && user) {
+      const permissions = JSON.parse(savedPermissions);
+      const rolePermissions = permissions[user.role];
+      if (rolePermissions && rolePermissions[item.title] !== undefined) {
+        return rolePermissions[item.title];
+      }
+    }
+
+    // Fallback to static allowedRoles if no dynamic preference exists
+    if (!item.allowedRoles) return true;
+    return user && item.allowedRoles.includes(user.role);
+  });
 
   return (
     <Sidebar className="bg-gradient-to-b from-purple-50 via-blue-50 to-indigo-50 border-r border-purple-200/50 z-[90]">
@@ -498,47 +544,67 @@ export function AdminSidebar() {
         </SidebarMenu>{" "}
       </SidebarHeader>
       <SidebarContent className="scrollbar-h-screen overflow-y-auto scrollbar-none scrollbar-track-current p-2 gap-0 bg-transparent">
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            title={item.title}
-            defaultOpen={(item.children || []).some((child) => child.isActive)}
-            className="group/collapsible"
-          >
-            <SidebarGroup className="">
-              <SidebarGroupLabel
-                asChild
-                className="group/label text-gray-700 hover:bg-purple-100 hover:text-purple-900 text-sm font-semibold"
-              >
-                <CollapsibleTrigger className="flex items-center text-left whitespace-nowrap w-full rounded-md font-medium text-gray-700 hover:bg-purple-100 hover:text-purple-900 data-[state=open]/collapsible:bg-purple-100 data-[state=open]/collapsible:text-purple-900">
-                  <item.icon className="mr-2 inline-block h-4 w-4 align-text-bottom" />
-                  {item.title}{" "}
-                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenuSub className="w-full">
-                    {(item.children || []).map((child) => {
-                      const isActive = child.url === location.pathname;
-                      return (
-                        <SidebarMenuSubItem key={child.title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={isActive}
-                            className="text-gray-600 hover:text-purple-900 hover:bg-purple-50 data-[active=true]:bg-white-200 data-[active=true]:text-purple-900 data-[active=true]:font-semibold"
-                          >
-                            <Link to={child.url || "#"}><span><child.icon className="mr-2 inline-block h-4 w-4 align-text-left" /></span>{child.title}</Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      )
-                    })}
-                  </SidebarMenuSub>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
+        {filteredItems.map((item) => {
+          const hasChildren = item.children && item.children.length > 0;
+
+          if (!hasChildren && item.url) {
+            return (
+              <SidebarGroup key={item.title} className="py-0">
+                <SidebarGroupLabel
+                  asChild
+                  className="group/label text-gray-700 hover:bg-purple-100 hover:text-purple-900 text-sm font-semibold h-9"
+                >
+                  <Link to={item.url} className="flex items-center text-left whitespace-nowrap w-full rounded-md font-medium text-gray-700 hover:bg-purple-100 hover:text-purple-900 data-[active=true]:bg-purple-100 data-[active=true]:text-purple-900">
+                    <item.icon className="mr-2 inline-block h-4 w-4 align-text-bottom" />
+                    {item.title}
+                  </Link>
+                </SidebarGroupLabel>
+              </SidebarGroup>
+            );
+          }
+
+          return (
+            <Collapsible
+              key={item.title}
+              title={item.title}
+              defaultOpen={(item.children || []).some((child) => child.isActive)}
+              className="group/collapsible"
+            >
+              <SidebarGroup className="">
+                <SidebarGroupLabel
+                  asChild
+                  className="group/label text-gray-700 hover:bg-purple-100 hover:text-purple-900 text-sm font-semibold"
+                >
+                  <CollapsibleTrigger className="flex items-center text-left whitespace-nowrap w-full rounded-md font-medium text-gray-700 hover:bg-purple-100 hover:text-purple-900 data-[state=open]/collapsible:bg-purple-100 data-[state=open]/collapsible:text-purple-900">
+                    <item.icon className="mr-2 inline-block h-4 w-4 align-text-bottom" />
+                    {item.title}{" "}
+                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenuSub className="w-full">
+                      {(item.children || []).map((child) => {
+                        const isActive = child.url === location.pathname;
+                        return (
+                          <SidebarMenuSubItem key={child.title}>
+                            <SidebarMenuSubButton
+                              asChild
+                              isActive={isActive}
+                              className="text-gray-600 hover:text-purple-900 hover:bg-purple-50 data-[active=true]:bg-white-200 data-[active=true]:text-purple-900 data-[active=true]:font-semibold"
+                            >
+                              <Link to={child.url || "#"}><span><child.icon className="mr-2 inline-block h-4 w-4 align-text-left" /></span>{child.title}</Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )
+                      })}
+                    </SidebarMenuSub>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          );
+        })}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

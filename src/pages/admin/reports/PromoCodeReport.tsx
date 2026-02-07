@@ -264,27 +264,9 @@ const tableColumns: ColumnDef<PromoCode>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Code", dataKey: "code" },
-  { header: "Description", dataKey: "description" },
-  { header: "Class", dataKey: "vehicleClasses" },
-  { header: "Type", dataKey: "discountType" },
-  { header: "Value", dataKey: "discountValue" },
-  { header: "First Time", dataKey: "isFirstTimeOnly" },
-  { header: "Max Amt", dataKey: "maxAmount" },
-  { header: "Max/User", dataKey: "maxCountPerUser" },
-  { header: "Usage", dataKey: "maxUsage" },
-  { header: "Start", dataKey: "startDate" },
-  { header: "End", dataKey: "endDate" },
-  { header: "Active", dataKey: "isActive" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Code", dataKey: "code" },
   { header: "Description", dataKey: "description" },
   {
@@ -393,8 +375,7 @@ export default function PromoCodeReport() {
         title="Promo Code Audit Report"
         data={allPromoData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="PromoCodeReport.pdf"
         filters={[

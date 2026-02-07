@@ -317,15 +317,14 @@ const tableColumns: ColumnDef<UnifiedModification>[] = [
       return (
         <Badge
           variant="outline"
-          className={`gap-1 ${
-            source === "App"
+          className={`gap-1 ${source === "App"
               ? isTuk
                 ? "border-yellow-500 text-yellow-700 bg-yellow-50"
                 : "border-green-600 text-green-700 bg-green-50"
               : isTuk
-              ? "border-yellow-500 text-yellow-700 bg-yellow-50"
-              : "border-blue-500 text-blue-700 bg-blue-50"
-          }`}
+                ? "border-yellow-500 text-yellow-700 bg-yellow-50"
+                : "border-blue-500 text-blue-700 bg-blue-50"
+            }`}
         >
           {source === "App" ? (
             <Smartphone className="h-3 w-3" />
@@ -353,24 +352,9 @@ const tableColumns: ColumnDef<UnifiedModification>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Booking ID", dataKey: "bookingId" },
-  { header: "Modified On", dataKey: "modifiedOn" },
-  { header: "Modified By", dataKey: "modifiedByName" },
-  { header: "Field Changed", dataKey: "fieldName" },
-  { header: "Old Value", dataKey: "oldValue" },
-  { header: "New Value", dataKey: "newValue" },
-  { header: "Reason", dataKey: "reason" },
-  { header: "Source", dataKey: "bookingSource" },
-  { header: "Vehicle", dataKey: "bookingVehicleClass" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Booking ID", dataKey: "bookingId" },
   { header: "Modified On", dataKey: "modifiedOn" },
   { header: "Modified By Type", dataKey: "modifiedByType" },
@@ -575,8 +559,7 @@ export default function BookingModificationReport() {
         title="Booking Modification Audit Report"
         data={modificationData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="fieldName"
         fileName="BookingModifications.pdf"
         filters={[

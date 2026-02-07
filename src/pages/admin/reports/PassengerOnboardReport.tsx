@@ -268,9 +268,9 @@ const tableColumns: ColumnDef<OnboardBooking>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
+const exportColumns = [
   { header: "Booking ID", dataKey: "refNumber" },
   { header: "Customer", dataKey: "customer" },
   { header: "Driver", dataKey: "driver" },
@@ -279,22 +279,6 @@ const pdfColumns = [
   { header: "From", dataKey: "from" },
   { header: "To", dataKey: "to" },
   { header: "Location", dataKey: "currentLocation" },
-  { header: "Distance", dataKey: "distance" },
-  { header: "ETA", dataKey: "eta" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
-  { header: "Booking ID", dataKey: "refNumber" },
-  { header: "Customer", dataKey: "customer" },
-  { header: "Driver", dataKey: "driver" },
-  { header: "Vehicle Type", dataKey: "vehicleType" },
-  { header: "Vehicle #", dataKey: "vehicle" },
-  { header: "From", dataKey: "from" },
-  { header: "To", dataKey: "to" },
-  { header: "Current Location", dataKey: "currentLocation" },
   { header: "Distance", dataKey: "distance" },
   { header: "ETA", dataKey: "eta" },
 ];
@@ -411,8 +395,7 @@ export default function PassengerOnboardReport() {
         title="Passenger Onboard Audit Report"
         data={allOnboardData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="customer"
         fileName="PassengerOnboard.pdf"
         filters={[

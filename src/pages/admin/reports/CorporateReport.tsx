@@ -206,25 +206,9 @@ const tableColumns: ColumnDef<Corporate>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS (For PDF Export)
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Name", dataKey: "name" },
-  { header: "Code", dataKey: "code" },
-  { header: "Contact", dataKey: "primaryContact" },
-  { header: "Phone", dataKey: "phone" },
-  { header: "Email", dataKey: "email" },
-  { header: "Address", dataKey: "address" },
-  { header: "Cash Disc.", dataKey: "cashDiscount" },
-  { header: "Credit Disc.", dataKey: "creditDiscount" },
-  { header: "Quick Booking", dataKey: "quickBooking" },
-  { header: "Status", dataKey: "status" },
-];
-
-// ============================================
-// CSV COLUMNS (For CSV Export - More Detailed)
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Name", dataKey: "name" },
   { header: "Code", dataKey: "code" },
   { header: "Primary Contact", dataKey: "primaryContact" },
@@ -232,18 +216,18 @@ const csvColumns = [
   { header: "Email", dataKey: "email" },
   { header: "Address", dataKey: "address" },
   { header: "Date", dataKey: "date" },
-  { 
-    header: "Cash Discount", 
+  {
+    header: "Cash Discount",
     dataKey: "cashDiscount",
     formatter: (value: number) => `${value}%`
   },
-  { 
-    header: "Credit Discount", 
+  {
+    header: "Credit Discount",
     dataKey: "creditDiscount",
     formatter: (value: number) => `${value}%`
   },
-  { 
-    header: "Quick Booking", 
+  {
+    header: "Quick Booking",
     dataKey: "quickBooking",
     formatter: (value: boolean) => value ? "Yes" : "No"
   },
@@ -259,8 +243,7 @@ export default function CorporateReport() {
       title="Corporate Partners Audit Report"
       data={allCorporateData}
       tableColumns={tableColumns}
-      pdfColumns={pdfColumns}
-      csvColumns={csvColumns}
+      exportColumns={exportColumns}
       searchKey="searchField"
       fileName="CorporateReport.pdf"
       filters={[

@@ -207,7 +207,10 @@ const tableColumns: ColumnDef<User>[] = [
 // ============================================
 // PDF COLUMNS
 // ============================================
-const pdfColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Username", dataKey: "username" },
   { header: "Email", dataKey: "email" },
   { header: "First Name", dataKey: "firstName" },
@@ -216,11 +219,6 @@ const pdfColumns = [
   { header: "Role", dataKey: "role" },
   { header: "Status", dataKey: "status" },
 ];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = pdfColumns;
 
 // ============================================
 // STATISTICS COMPONENT
@@ -300,8 +298,7 @@ export default function UserReport() {
         title="User Accounts Audit Report"
         data={allUserData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="UserReport.pdf"
         filters={[

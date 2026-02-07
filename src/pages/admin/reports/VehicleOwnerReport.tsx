@@ -184,7 +184,10 @@ const tableColumns: ColumnDef<VehicleOwner>[] = [
 // ============================================
 // PDF COLUMNS
 // ============================================
-const pdfColumns = [
+// ============================================
+// EXPORT COLUMNS (Unified)
+// ============================================
+const exportColumns = [
   { header: "Name", dataKey: "name" },
   { header: "NIC / Bus. Reg", dataKey: "registrationId" },
   { header: "Primary Contact", dataKey: "primaryContact" },
@@ -194,11 +197,6 @@ const pdfColumns = [
   { header: "Company", dataKey: "company" },
   { header: "Modified", dataKey: "dateModified" },
 ];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = pdfColumns;
 
 // ============================================
 // STATISTICS COMPONENT
@@ -284,8 +282,7 @@ export default function VehicleOwnerReport() {
         title="Vehicle Owner Report"
         data={allOwnerData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="VehicleOwnerReport.pdf"
         filters={[

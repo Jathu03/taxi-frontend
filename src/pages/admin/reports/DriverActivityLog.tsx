@@ -212,11 +212,10 @@ const tableColumns: ColumnDef<DriverActivity>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <div
-          className={`h-2 w-2 rounded-full ${
-            row.original.onlineStatus === "Online"
+          className={`h-2 w-2 rounded-full ${row.original.onlineStatus === "Online"
               ? "bg-green-500 animate-pulse"
               : "bg-gray-400"
-          }`}
+            }`}
         />
         <span className="font-mono font-semibold text-purple-700">
           {row.getValue("code")}
@@ -315,23 +314,9 @@ const tableColumns: ColumnDef<DriverActivity>[] = [
 ];
 
 // ============================================
-// PDF COLUMNS
+// EXPORT COLUMNS (Unified)
 // ============================================
-const pdfColumns = [
-  { header: "Code", dataKey: "code" },
-  { header: "First Name", dataKey: "firstName" },
-  { header: "Contact", dataKey: "contactNumber" },
-  { header: "Vehicle Code", dataKey: "vehicleCode" },
-  { header: "Vehicle Model", dataKey: "vehicleModel" },
-  { header: "Last Location", dataKey: "lastLocation" },
-  { header: "Online Duration", dataKey: "totalOnlineDuration" },
-  { header: "Status", dataKey: "onlineStatus" },
-];
-
-// ============================================
-// CSV COLUMNS
-// ============================================
-const csvColumns = [
+const exportColumns = [
   { header: "Code", dataKey: "code" },
   { header: "First Name", dataKey: "firstName" },
   { header: "Contact Number", dataKey: "contactNumber" },
@@ -359,8 +344,8 @@ function ActivityStatistics({ data }: { data: DriverActivity[] }) {
       avgDuration:
         data.length > 0
           ? `${Math.floor(totalMinutes / data.length / 60)}h ${Math.floor(
-              (totalMinutes / data.length) % 60
-            )}m`
+            (totalMinutes / data.length) % 60
+          )}m`
           : "0h 0m",
     };
   }, [data]);
@@ -421,13 +406,12 @@ export default function DriverActivityLog() {
   return (
     <div className="space-y-6">
       <ActivityStatistics data={allActivityData} />
-      
+
       <ReportPageTemplate
         title="Driver Activity Log Audit Report"
         data={allActivityData}
         tableColumns={tableColumns}
-        pdfColumns={pdfColumns}
-        csvColumns={csvColumns}
+        exportColumns={exportColumns}
         searchKey="searchField"
         fileName="DriverActivityLog.pdf"
         filters={[
