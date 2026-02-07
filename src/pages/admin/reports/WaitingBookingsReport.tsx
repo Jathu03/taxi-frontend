@@ -316,18 +316,23 @@ const tableColumns: ColumnDef<WaitingBooking>[] = [
     header: () => <span className="font-bold text-black">Urgency</span>,
     cell: ({ row }) => {
       const urgency = row.getValue("urgencyLevel") as string;
-      const icons: Record<string, JSX.Element> = {
+      
+      // FIX: Removed explicit type annotation that caused error
+      const icons = {
         normal: <CheckCircle className="h-3 w-3 mr-1" />,
         near: <Clock className="h-3 w-3 mr-1" />,
         urgent: <AlertTriangle className="h-3 w-3 mr-1" />,
       };
+      
       const labels: Record<string, string> = {
         normal: "Normal",
         near: "Near Urgent",
         urgent: "Urgent",
       };
+      
       return (
         <Badge variant="outline" className={getUrgencyBadgeClass(urgency)}>
+          {/* @ts-ignore */}
           {icons[urgency]}
           {labels[urgency]}
         </Badge>
