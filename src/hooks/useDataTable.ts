@@ -12,18 +12,18 @@ export interface UseDataTableReturn<T> {
   // Data
   data: T[];
   filteredData: T[];
-  setData: (data: T[]) => void;
-  
+  setData: (data: T[] | ((prev: T[]) => T[])) => void;
+
   // Search
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  
+
   // Pagination
   currentPage: number;
   pageSize: number;
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
-  
+
   // Bulk operations
   selectedItems: T[];
   selectedIds: string[];
@@ -32,20 +32,20 @@ export interface UseDataTableReturn<T> {
   clearSelection: () => void;
   isSelected: (item: T) => boolean;
   isAllSelected: boolean;
-  
+
   // Filters
   filters: Record<string, string>;
   setFilter: (key: string, value: string) => void;
   clearFilters: () => void;
   hasActiveFilters: boolean;
-  
+
   // Actions
   handleBulkDelete: () => void;
   handleExport: () => void;
   handleCreate: (item: Partial<T>) => void;
   handleEdit: (item: T) => void;
   handleDelete: (id: string) => void;
-  
+
   // Computed values
   totalItems: number;
   totalPages: number;
@@ -110,18 +110,18 @@ export function useDataTable<T extends { id: string | number }>(
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   // Selection helpers
-  const selectedIds = useMemo(() => 
-    selectedItems.map(item => String(item.id)), 
+  const selectedIds = useMemo(() =>
+    selectedItems.map(item => String(item.id)),
     [selectedItems]
   );
 
-  const isSelected = useCallback((item: T) => 
-    selectedItems.some(selected => selected.id === item.id), 
+  const isSelected = useCallback((item: T) =>
+    selectedItems.some(selected => selected.id === item.id),
     [selectedItems]
   );
 
-  const isAllSelected = useMemo(() => 
-    paginatedData.length > 0 && paginatedData.every(isSelected), 
+  const isAllSelected = useMemo(() =>
+    paginatedData.length > 0 && paginatedData.every(isSelected),
     [paginatedData, isSelected]
   );
 
@@ -138,7 +138,7 @@ export function useDataTable<T extends { id: string | number }>(
 
   const toggleAllSelection = useCallback(() => {
     if (isAllSelected) {
-      setSelectedItems(prev => 
+      setSelectedItems(prev =>
         prev.filter(item => !paginatedData.some(pageItem => pageItem.id === item.id))
       );
     } else {
@@ -173,15 +173,15 @@ export function useDataTable<T extends { id: string | number }>(
     setCurrentPage(1);
   }, []);
 
-  const hasActiveFilters = useMemo(() => 
-    Object.keys(filters).length > 0 || searchTerm.length > 0, 
+  const hasActiveFilters = useMemo(() =>
+    Object.keys(filters).length > 0 || searchTerm.length > 0,
     [filters, searchTerm]
   );
 
   // Action handlers
   const handleBulkDelete = useCallback(() => {
     if (!enableBulkDelete) return;
-    
+
     const idsToDelete = selectedIds;
     setData(prev => prev.filter(item => !idsToDelete.includes(String(item.id))));
     clearSelection();
@@ -189,16 +189,16 @@ export function useDataTable<T extends { id: string | number }>(
 
   const handleExport = useCallback(() => {
     if (!enableExport) return;
-    
+
     // Create CSV content
     const headers = Object.keys(filteredData[0] || {}).filter(key => key !== 'id');
     const csvContent = [
       headers.join(','),
-      ...filteredData.map(item => 
+      ...filteredData.map(item =>
         headers.map(header => {
           const value = item[header as keyof T];
-          return typeof value === 'string' && value.includes(',') 
-            ? `"${value}"` 
+          return typeof value === 'string' && value.includes(',')
+            ? `"${value}"`
             : String(value);
         }).join(',')
       )
@@ -226,7 +226,7 @@ export function useDataTable<T extends { id: string | number }>(
   }, []);
 
   const handleEdit = useCallback((item: T) => {
-    setData(prev => prev.map(existing => 
+    setData(prev => prev.map(existing =>
       existing.id === item.id ? item : existing
     ));
   }, []);
@@ -236,7 +236,7 @@ export function useDataTable<T extends { id: string | number }>(
   }, []);
 
   // Reset page when data changes
-  const setDataWithReset = useCallback((newData: T[]) => {
+  const setDataWithReset = useCallback((newData: T[] | ((prev: T[]) => T[])) => {
     setData(newData);
     setCurrentPage(1);
     clearSelection();
@@ -247,17 +247,17 @@ export function useDataTable<T extends { id: string | number }>(
     data,
     filteredData: paginatedData,
     setData: setDataWithReset,
-    
+
     // Search
     searchTerm,
     setSearchTerm,
-    
+
     // Pagination
     currentPage,
     pageSize: pageSizeState,
     setCurrentPage,
     setPageSize: setPageSizeState,
-    
+
     // Bulk operations
     selectedItems,
     selectedIds,
@@ -266,20 +266,20 @@ export function useDataTable<T extends { id: string | number }>(
     clearSelection,
     isSelected,
     isAllSelected,
-    
+
     // Filters
     filters,
     setFilter,
     clearFilters,
     hasActiveFilters,
-    
+
     // Actions
     handleBulkDelete,
     handleExport,
     handleCreate,
     handleEdit,
     handleDelete,
-    
+
     // Computed values
     totalItems,
     totalPages,

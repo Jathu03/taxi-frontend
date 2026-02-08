@@ -1,12 +1,21 @@
-"use client";
 import { useState, useMemo } from "react";
 import type { ReactNode } from 'react';
 import { type ColumnDef } from "@tanstack/react-table";
-import { EnhancedDataTable } from "@/components/EnhancedDataTable";
+import { EnhancedDataTable } from "@/components/DataTableLayout"; // Fixed import path from @/components/EnhancedDataTable to @/components/DataTableLayout
 import { Button } from "@/components/ui/button";
-import { FileText, Printer, FileSpreadsheet } from "lucide-react";
+import { FileText, Printer, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { useReportExport } from "@/hooks/useReportExport";
 import { type ReportColumn } from "@/types/reports";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type ReportFilter<T> = {
   key: keyof T;
@@ -21,6 +30,7 @@ export type ReportConfig<T> = {
   tableColumns: ColumnDef<T>[];
   exportColumns: ReportColumn[];
   searchKey: keyof T;
+  searchPlaceholder?: string;
   filters?: ReportFilter<T>[];
   additionalActions?: ReactNode;
   fileName: string;
@@ -36,6 +46,7 @@ export function ReportPageTemplate<T extends Record<string, any>>({
   tableColumns,
   exportColumns,
   searchKey,
+  searchPlaceholder,
   filters = [],
   additionalActions,
   fileName,
@@ -46,6 +57,9 @@ export function ReportPageTemplate<T extends Record<string, any>>({
 }: ReportConfig<T>) {
   const { generatePDFReport, generateCSVReport, generateExcelReport } = useReportExport();
 
+  // Search state
+  const [searchValue, setSearchValue] = useState("");
+
   // Dynamic filter state
   const [filterValues, setFilterValues] = useState<Record<string, string>>(
     filters.reduce((acc, f) => ({ ...acc, [f.key as string]: f.defaultValue }), {})
@@ -55,6 +69,15 @@ export function ReportPageTemplate<T extends Record<string, any>>({
   const filteredData = useMemo(() => {
     let result = [...data];
 
+    // Apply search
+    if (searchValue) {
+      result = result.filter(item => {
+        const val = item[searchKey as string]?.toString().toLowerCase() || "";
+        return val.includes(searchValue.toLowerCase());
+      });
+    }
+
+    // Apply filters
     filters.forEach(filter => {
       const filterValue = filterValues[filter.key as string];
       if (filterValue !== "all") {
@@ -63,7 +86,7 @@ export function ReportPageTemplate<T extends Record<string, any>>({
     });
 
     return result;
-  }, [data, filterValues, filters]);
+  }, [data, filterValues, filters, searchValue, searchKey]);
 
   // Generate filter tags for PDF
   const getFilterTags = () => {
@@ -110,11 +133,21 @@ export function ReportPageTemplate<T extends Record<string, any>>({
     );
   };
 
+  const handleReset = () => {
+    setSearchValue("");
+    setFilterValues(
+      filters.reduce((acc, f) => ({ ...acc, [f.key as string]: f.defaultValue }), {})
+    );
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{title}</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-[#6330B8]">{title}</h1>
+          <p className="text-muted-foreground mt-1">Audit and analysis report</p>
+        </div>
         <div className="flex gap-2">
           {additionalActions}
 
@@ -144,35 +177,56 @@ export function ReportPageTemplate<T extends Record<string, any>>({
         </div>
       </div>
 
-      {/* Filters */}
-      {filters.length > 0 && (
-        <div className="flex gap-4 flex-wrap">
+      {/* Filter Panel */}
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="search">Search</Label>
+            <Input
+              id="search"
+              placeholder={searchPlaceholder || `Search by ${String(searchKey)}...`}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+          </div>
+
           {filters.map(filter => (
-            <div key={filter.key as string} className="flex items-center gap-2">
-              <label className="text-sm font-medium">{filter.label}:</label>
-              <select
+            <div key={filter.key as string} className="space-y-2">
+              <Label htmlFor={filter.key as string}>{filter.label}</Label>
+              <Select
                 value={filterValues[filter.key as string]}
-                onChange={e =>
-                  setFilterValues(prev => ({ ...prev, [filter.key]: e.target.value }))
+                onValueChange={(val) =>
+                  setFilterValues(prev => ({ ...prev, [filter.key]: val }))
                 }
-                className="border rounded px-3 py-1.5"
               >
-                {filter.options.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id={filter.key as string}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {filter.options.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ))}
+
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
+          </div>
         </div>
-      )}
+      </Card>
 
       {/* Data Table */}
       <EnhancedDataTable
         columns={tableColumns}
         data={filteredData}
-        searchKey={searchKey as string}
+        hideSearch
+        enableExport={false} // Export handled by template buttons
       />
     </div>
   );

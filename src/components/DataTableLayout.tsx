@@ -105,6 +105,10 @@ export interface DataTableProps<TData, TValue> {
 
   // Hide pagination
   hidePagination?: boolean;
+
+  // Search control
+  hideSearch?: boolean;
+  externalSearch?: string;
 }
 
 export function EnhancedDataTable<TData, TValue>({
@@ -134,6 +138,8 @@ export function EnhancedDataTable<TData, TValue>({
   createDialogInitialValues,
   createDialogTitle = "Create Item",
   createDialogDescription = "Fill in the details to create a new item.",
+  hideSearch = false,
+  externalSearch,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -284,7 +290,7 @@ export function EnhancedDataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
-      globalFilter,
+      globalFilter: externalSearch !== undefined ? externalSearch : globalFilter,
     },
   });
 
@@ -404,14 +410,16 @@ export function EnhancedDataTable<TData, TValue>({
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Search */}
-          <div className="flex-1 max-w-sm">
-            <Input
-              placeholder={searchPlaceholder}
-              value={globalFilter ?? ""}
-              onChange={(event) => setGlobalFilter(event.target.value)}
-              className="max-w-sm"
-            />
-          </div>
+          {!hideSearch && (
+            <div className="flex-1 max-w-sm">
+              <Input
+                placeholder={searchPlaceholder}
+                value={globalFilter ?? ""}
+                onChange={(event) => setGlobalFilter(event.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center gap-2">

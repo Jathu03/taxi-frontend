@@ -1,112 +1,53 @@
-"use client";
+import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/DataTableLayout";
 import { Button } from "@/components/ui/button";
-import { Eye, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Eye, RotateCcw } from "lucide-react";
 import { useDataTable } from "@/hooks/useDataTable";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type DispatchedBooking = {
   id: string;
   bookingId: string;
-  organization: string;
   customerName: string;
-  passengerNumber: string;
-  hireType: string;
-  pickupTime: string;
-  pickupAddress: string;
-  bookedBy: string;
-  dispatchedBy: string;
-  dispatchedTime: string;
-  testBooking: string;
   driverName: string;
   vehicleNumber: string;
-  fareScheme: string;
+  dispatchTime: string;
+  pickupLocation: string;
+  status: string;
 };
 
 const columns = (navigate: ReturnType<typeof useNavigate>): ColumnDef<DispatchedBooking>[] => [
-  { 
-    accessorKey: "bookingId", 
-    header: "Booking",
-    cell: ({ row }) => (
-      <div className="flex flex-col gap-2">
-        <span>{row.original.bookingId}</span>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-          onClick={() =>
-            navigate("/admin/bookings/dispatch-vehicle", {
-              state: { booking: row.original },
-            })
-          }
-        >
-          <RefreshCw className="mr-2 h-3 w-3" /> Redispatch
-        </Button>
-      </div>
-    ),
-  },
-  { accessorKey: "organization", header: "Org" },
-  { 
-    accessorKey: "customerName", 
-    header: "Customer",
-    cell: ({ row }) => {
-      const customer = row.original.customerName;
-      const org = row.original.organization;
-      return `${customer} ${org}(${customer})`;
-    },
-  },
-  { accessorKey: "passengerNumber", header: "Passenger" },
-  { accessorKey: "hireType", header: "Hire Type" },
-  { accessorKey: "pickupTime", header: "Pickup Time" },
-  { accessorKey: "pickupAddress", header: "Pickup Address" },
-  { accessorKey: "bookedBy", header: "Booked By" },
-  { accessorKey: "dispatchedBy", header: "Dispatched By" },
-  { accessorKey: "dispatchedTime", header: "Dispatched Time" },
-  { accessorKey: "testBooking", header: "Test Booking" },
-  { accessorKey: "driverName", header: "Driver" },
-  { accessorKey: "vehicleNumber", header: "Vehicle" },
-  { accessorKey: "fareScheme", header: "Fare Scheme" },
+  { accessorKey: "bookingId", header: () => <span className="font-bold text-black">Booking ID</span> },
+  { accessorKey: "customerName", header: () => <span className="font-bold text-black">Customer</span> },
+  { accessorKey: "driverName", header: () => <span className="font-bold text-black">Driver</span> },
+  { accessorKey: "vehicleNumber", header: () => <span className="font-bold text-black">Vehicle</span> },
+  { accessorKey: "dispatchTime", header: () => <span className="font-bold text-black whitespace-nowrap">Dispatch Time</span> },
+  { accessorKey: "status", header: () => <span className="font-bold text-black">Status</span>, cell: ({ row }) => <Badge className="bg-blue-100 text-blue-700 border-blue-200">{row.original.status}</Badge> },
   {
     id: "actions",
-    header: "Actions",
+    header: () => <span className="text-right font-bold text-black block">Actions</span>,
     cell: ({ row }) => {
       return (
-        <div className="flex gap-2">
+        <div className="flex justify-end">
           <Button
-            size="sm"
-            variant="default"
-            className="bg-green-600 hover:bg-green-700"
-            onClick={() =>
-              navigate("/admin/bookings/complete-booking", {
-                state: { booking: row.original },
-              })
-            }
-          >
-            <CheckCircle className="mr-2 h-4 w-4" /> Complete
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() =>
-              navigate("/admin/bookings/cancel-booking", {
-                state: { booking: row.original },
-              })
-            }
-          >
-            <XCircle className="mr-2 h-4 w-4" /> Cancel
-          </Button>
-          <Button
-            size="sm"
             variant="outline"
-            onClick={() =>
-              navigate(`/admin/bookings/view/${row.original.bookingId}`, {
-                state: { booking: row.original },
-              })
-            }
+            size="sm"
+            onClick={() => navigate(`/admin/bookings/view/${row.original.id}`)}
+            className="text-blue-600 border-blue-200"
           >
-            <Eye className="mr-2 h-4 w-4" /> View Hire
+            <Eye className="mr-2 h-4 w-4" /> View
           </Button>
         </div>
       );
@@ -115,95 +56,15 @@ const columns = (navigate: ReturnType<typeof useNavigate>): ColumnDef<Dispatched
 ];
 
 const mockDispatchedBookings: DispatchedBooking[] = [
-  { 
-    id: "1", 
-    bookingId: "289264", 
-    organization: "Central Bank", 
-    customerName: "Menusha", 
-    passengerNumber: "0715527165", 
-    hireType: "On The Meter", 
-    pickupTime: "09/19/2025 20:00", 
-    pickupAddress: ",30 Janadhipathi Mawatha, Colombo,,", 
-    bookedBy: "Nirash", 
-    dispatchedBy: "nethma", 
-    dispatchedTime: "09/19/2025 19:06", 
-    testBooking: "", 
-    driverName: "375 Ranga", 
-    vehicleNumber: "PJ-4093", 
-    fareScheme: "CBSL Budget" 
-  },
-  { 
-    id: "2", 
-    bookingId: "288668", 
-    organization: "Central Bank", 
-    customerName: "Kasuni", 
-    passengerNumber: "0774180836", 
-    hireType: "On The Meter", 
-    pickupTime: "09/12/2025 20:15", 
-    pickupAddress: ",30 Janadhipathi Mawatha, Colombo,,", 
-    bookedBy: "nethma", 
-    dispatchedBy: "nethma", 
-    dispatchedTime: "09/12/2025 19:21", 
-    testBooking: "", 
-    driverName: "375 Ranga", 
-    vehicleNumber: "PJ-4093", 
-    fareScheme: "Mileage Calculator" 
-  },
-  { 
-    id: "3", 
-    bookingId: "288557", 
-    organization: "CBSL Package", 
-    customerName: "Virendra", 
-    passengerNumber: "0761880700", 
-    hireType: "On The Meter", 
-    pickupTime: "09/12/2025 08:00", 
-    pickupAddress: ",,,", 
-    bookedBy: "Haroon", 
-    dispatchedBy: "devinda95", 
-    dispatchedTime: "09/12/2025 07:05", 
-    testBooking: "", 
-    driverName: "375 Ranga", 
-    vehicleNumber: "PJ-4093", 
-    fareScheme: "STANDARD" 
-  },
-  { 
-    id: "4", 
-    bookingId: "288141", 
-    organization: "KINGSBURY HOTEL", 
-    customerName: "Azeem Kingsbury", 
-    passengerNumber: "0772170000", 
-    hireType: "On The Meter", 
-    pickupTime: "09/06/2025 10:00", 
-    pickupAddress: ",48 Janadhipathi Mawatha, Colombo,,", 
-    bookedBy: "srikanthan", 
-    dispatchedBy: "srikanthan", 
-    dispatchedTime: "09/06/2025 09:29", 
-    testBooking: "", 
-    driverName: "3106 Company Vehicle", 
-    vehicleNumber: "CBB-8659", 
-    fareScheme: "CBSL Budget" 
-  },
-  { 
-    id: "5", 
-    bookingId: "287894", 
-    organization: "Hayleys Fentons", 
-    customerName: "Mrs.Kethmini", 
-    passengerNumber: "0770876451", 
-    hireType: "On The Meter", 
-    pickupTime: "09/03/2025 07:00", 
-    pickupAddress: ",WVF8+HMX, Colombo 01000,,", 
-    bookedBy: "shamalka", 
-    dispatchedBy: "Haroon", 
-    dispatchedTime: "09/03/2025 06:33", 
-    testBooking: "", 
-    driverName: "494 Ravi", 
-    vehicleNumber: "PF-2287", 
-    fareScheme: "STANDARD" 
-  },
+  { id: "1", bookingId: "DIS-001", customerName: "Sarah Johnson", driverName: "Sunil Perera", vehicleNumber: "WP-CAB-1234", dispatchTime: "2024-03-20 10:30", pickupLocation: "Colombo 03", status: "Dispatched" },
+  { id: "2", bookingId: "DIS-002", customerName: "Michael Silva", driverName: "Kamal Fernando", vehicleNumber: "WP-CAB-5678", dispatchTime: "2024-03-20 10:45", pickupLocation: "Dehiwala", status: "Dispatched" },
 ];
 
 export default function DispatchedBookings() {
   const navigate = useNavigate();
+  const [filterText, setFilterText] = useState("");
+  const [filterBy, setFilterBy] = useState("customerName");
+
   const {
     data,
     handleBulkDelete,
@@ -211,25 +72,71 @@ export default function DispatchedBookings() {
     initialData: mockDispatchedBookings,
   });
 
+  const filteredData = useMemo(() => {
+    return data.filter((booking) => {
+      if (!filterText) return true;
+      const value = booking[filterBy as keyof DispatchedBooking]?.toString().toLowerCase() || "";
+      return value.includes(filterText.toLowerCase());
+    });
+  }, [data, filterText, filterBy]);
+
+  const handleReset = () => {
+    setFilterText("");
+    setFilterBy("customerName");
+  };
+
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Dispatched Bookings</h1>
-          <p className="text-muted-foreground">Track dispatched bookings</p>
+          <h1 className="text-3xl font-bold text-[#6330B8]">Dispatched Bookings</h1>
+          <p className="text-muted-foreground mt-1">Bookings currently assigned to drivers</p>
         </div>
-        <Badge className="text-lg px-4 py-2">{data.length} Active</Badge>
+        <Badge className="text-lg px-4 py-2 bg-[#6330B8]">{data.length} Dispatched</Badge>
       </div>
+
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter">Search</Label>
+            <Input
+              id="filter"
+              placeholder="Enter search term..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterBy">Search By</Label>
+            <Select value={filterBy} onValueChange={setFilterBy}>
+              <SelectTrigger id="filterBy">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customerName">Customer</SelectItem>
+                <SelectItem value="bookingId">Booking ID</SelectItem>
+                <SelectItem value="driverName">Driver</SelectItem>
+                <SelectItem value="vehicleNumber">Vehicle Number</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <EnhancedDataTable
         columns={columns(navigate)}
-        data={data}
-        searchKey="customerName"
-        searchPlaceholder="Search dispatched bookings..."
+        data={filteredData}
+        hideSearch
         enableBulkDelete
         onBulkDelete={handleBulkDelete}
         enableExport
-        enableColumnVisibility
       />
     </div>
   );

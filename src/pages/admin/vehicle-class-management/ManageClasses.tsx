@@ -1,134 +1,129 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Edit, Trash } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Edit, Trash, RotateCcw } from "lucide-react";
+import { type ColumnDef } from "@tanstack/react-table";
+import { EnhancedDataTable } from "@/components/DataTableLayout";
+import { useDataTable } from "@/hooks/useDataTable";
+import { Label } from "@/components/ui/label";
 
-type VehicleClass = {
+interface VehicleClass {
   id: string;
   className: string;
-  classCode: string;
-  showInApp: boolean;
-  fareScheme: string;
-  corporateFareScheme: string;
-  roadTripFareScheme: string;
-  appFareScheme: string;
-  commission: string;
-};
+  description: string;
+  dateModified: string;
+}
 
 const mockClasses: VehicleClass[] = [
-  { id: "1", className: "BTG VAN", classCode: "BTG VAN", showInApp: false, fareScheme: "BTG Demo", corporateFareScheme: "BTG Demo", roadTripFareScheme: "BTG APP", appFareScheme: "BTG APP", commission: "0" },
-  { id: "2", className: "Double Cab", classCode: "Double Cab", showInApp: false, fareScheme: "STANDARD", corporateFareScheme: "STANDARD", roadTripFareScheme: "STANDARD", appFareScheme: "STANDARD", commission: "0" },
-  { id: "3", className: "Mini Van", classCode: "Buddy", showInApp: false, fareScheme: "STANDARD", corporateFareScheme: "STANDARD", roadTripFareScheme: "STANDARD", appFareScheme: "STANDARD", commission: "0" },
-  { id: "4", className: "ECONOMY", classCode: "ECON", showInApp: false, fareScheme: "BTG APP", corporateFareScheme: "BTG APP", roadTripFareScheme: "BTG APP", appFareScheme: "BTG APP", commission: "0" },
+  { id: "1", className: "BUDGET", description: "Budget Class", dateModified: "2/26/2024 8:23:59 PM" },
+  { id: "2", className: "CITY", description: "City Class", dateModified: "2/26/2024 8:43:59 PM" },
+  { id: "3", className: "CAR", description: "Standard Car", dateModified: "2/26/2024 9:00:00 PM" },
 ];
+
+const columns = (
+  navigate: ReturnType<typeof useNavigate>
+): ColumnDef<VehicleClass>[] => [
+    { accessorKey: "className", header: () => <span className="font-bold text-black">Class Name</span> },
+    { accessorKey: "description", header: () => <span className="font-bold text-black">Description</span> },
+    { accessorKey: "dateModified", header: () => <span className="font-bold text-black text-right block">Date Modified</span>, cell: ({ row }) => <div className="text-right">{row.original.dateModified}</div> },
+    {
+      id: "actions",
+      header: () => <span className="text-right font-bold text-black block">Actions</span>,
+      cell: ({ row }) => {
+        const vehicleClass = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/vehicle-classes/edit/${vehicleClass.id}`)}
+              className="text-blue-600 border-blue-200"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/vehicle-classes/delete/${vehicleClass.id}`)}
+              className="text-red-600 border-red-200"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
 export default function ManageClasses() {
   const navigate = useNavigate();
-  const [classes, setClasses] = useState<VehicleClass[]>(mockClasses);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filterText, setFilterText] = useState("");
 
-  const filteredClasses = classes.filter((vehicleClass) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      vehicleClass.className.toLowerCase().includes(search) ||
-      vehicleClass.classCode.toLowerCase().includes(search)
-    );
+  const {
+    data,
+    handleBulkDelete,
+  } = useDataTable<VehicleClass>({
+    initialData: mockClasses,
   });
+
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (!filterText) return true;
+      return item.className.toLowerCase().includes(filterText.toLowerCase());
+    });
+  }, [data, filterText]);
+
+  const handleReset = () => {
+    setFilterText("");
+  };
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#6330B8]">Manage Vehicle Classes</h1>
-          <p className="text-muted-foreground mt-1">Configure vehicle classes and pricing tiers</p>
+          <h1 className="text-3xl font-bold text-[#6330B8]">Vehicle Classes</h1>
+          <p className="text-muted-foreground mt-1">Manage system-wide vehicle classes</p>
         </div>
         <Button
           onClick={() => navigate("/admin/vehicle-classes/add")}
-          className="bg-[#6330B8] hover:bg-[#6330B8]/90"
+          className="bg-[#6330B8] hover:bg-[#7C3AED]"
         >
-          Create New Class
+          <Plus className="mr-2 h-4 w-4" />
+          Add Class
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="mb-4">
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter">Search Class</Label>
             <Input
-              placeholder="Search by class name or class code..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-md"
+              id="filter"
+              placeholder="Filter by class name..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
             />
           </div>
 
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-black">Class Name</TableHead>
-                  <TableHead className="font-bold text-black">Class Code</TableHead>
-                  <TableHead className="font-bold text-black">Show in App</TableHead>
-                  <TableHead className="font-bold text-black">Fare Scheme</TableHead>
-                  <TableHead className="font-bold text-black">Corporate Fare Scheme</TableHead>
-                  <TableHead className="font-bold text-black">RoadTrip Fare Scheme</TableHead>
-                  <TableHead className="font-bold text-black">App Fare Scheme</TableHead>
-                  <TableHead className="font-bold text-black">Commission</TableHead>
-                  <TableHead className="font-bold text-black">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClasses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground">
-                      No classes found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredClasses.map((vehicleClass) => (
-                    <TableRow key={vehicleClass.id}>
-                      <TableCell className="font-medium">{vehicleClass.className}</TableCell>
-                      <TableCell>{vehicleClass.classCode || "-"}</TableCell>
-                      <TableCell>
-                        <Badge variant={vehicleClass.showInApp ? "default" : "secondary"}>
-                          {vehicleClass.showInApp ? "Yes" : "No"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{vehicleClass.fareScheme || "-"}</TableCell>
-                      <TableCell>{vehicleClass.corporateFareScheme || "-"}</TableCell>
-                      <TableCell>{vehicleClass.roadTripFareScheme || "-"}</TableCell>
-                      <TableCell>{vehicleClass.appFareScheme || "-"}</TableCell>
-                      <TableCell>{vehicleClass.commission}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => navigate(`/admin/vehicle-classes/edit/${vehicleClass.id}`)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => navigate(`/admin/vehicle-classes/delete/${vehicleClass.id}`)}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
           </div>
-        </CardContent>
+        </div>
       </Card>
+
+      <EnhancedDataTable
+        columns={columns(navigate)}
+        data={filteredData}
+        hideSearch
+        enableBulkDelete
+        onBulkDelete={handleBulkDelete}
+      />
     </div>
   );
 }

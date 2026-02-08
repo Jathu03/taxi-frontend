@@ -1,145 +1,238 @@
-"use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Edit, Trash, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { type ColumnDef } from "@tanstack/react-table";
+import { EnhancedDataTable } from "@/components/DataTableLayout";
+import { useDataTable } from "@/hooks/useDataTable";
 import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export type Vehicle = {
+interface Vehicle {
   id: string;
-  registrationNo: string;
-  code: string;
-  vehicleClass: string;
-  manufacture: string;
+  vehicleName: string;
+  vehiclePlate: string;
+  owner: string;
+  class: string;
+  category: string;
+  manufacturer: string;
   model: string;
-  insuranceExpiryDate: string;
-  revenueLicenseExpDate: string;
-};
+  isInspected: boolean;
+  isActive: boolean;
+  dateModified: string;
+}
 
 const mockVehicles: Vehicle[] = [
-  { id: "1", registrationNo: "LN-8978", code: "Ishan 15ft lorry", vehicleClass: "Lorry", manufacture: "Other", model: "Other", insuranceExpiryDate: "03 Dec 2025", revenueLicenseExpDate: "03 Dec 2025" },
-  { id: "2", registrationNo: "PF-1652", code: "Ishan Outside", vehicleClass: "VAN", manufacture: "Toyota", model: "KDH", insuranceExpiryDate: "02 Dec 2025", revenueLicenseExpDate: "02 Dec 2025" },
-  { id: "3", registrationNo: "CAX-0036", code: "3221 Fazly", vehicleClass: "BUDGET", manufacture: "Suzuki", model: "Spacia", insuranceExpiryDate: "01 Dec 2025", revenueLicenseExpDate: "01 Dec 2025" },
-  { id: "4", registrationNo: "CBQ-3898", code: "3218 Wazeem", vehicleClass: "BUDGET", manufacture: "Suzuki", model: "Wagon R", insuranceExpiryDate: "01 Dec 2025", revenueLicenseExpDate: "01 Dec 2025" },
-  { id: "5", registrationNo: "CAQ-8543", code: "Pick me 20", vehicleClass: "ECONOMY", manufacture: "Toyota", model: "Fielder", insuranceExpiryDate: "28 Nov 2025", revenueLicenseExpDate: "28 Nov 2025" },
-  { id: "6", registrationNo: "CAP-6283", code: "Counter CAP-6283", vehicleClass: "STANDARD", manufacture: "Toyota", model: "Axio", insuranceExpiryDate: "27 Nov 2025", revenueLicenseExpDate: "27 Nov 2025" },
-  { id: "7", registrationNo: "LQ 8224", code: "Wedage Lorry 001", vehicleClass: "Lorry", manufacture: "Other", model: "Other", insuranceExpiryDate: "26 Nov 2025", revenueLicenseExpDate: "26 Nov 2025" },
-  { id: "8", registrationNo: "CAB-7662", code: "Ranil Outside", vehicleClass: "STANDARD", manufacture: "Toyota", model: "Axio", insuranceExpiryDate: "26 Nov 2025", revenueLicenseExpDate: "26 Nov 2025" },
-  { id: "9", registrationNo: "CAN-4140", code: "3219 Vinoj", vehicleClass: "BUDGET", manufacture: "Suzuki", model: "Stingray", insuranceExpiryDate: "25 Nov 2025", revenueLicenseExpDate: "25 Nov 2025" },
+  {
+    id: "1",
+    vehicleName: "Honda Grace - ABC-1234",
+    vehiclePlate: "ABC-1234",
+    owner: "Jegath Fernando",
+    class: "BUDGET",
+    category: "Car",
+    manufacturer: "Honda",
+    model: "Grace",
+    isInspected: true,
+    isActive: true,
+    dateModified: "2/26/2024 8:23:59 PM",
+  },
+  {
+    id: "2",
+    vehicleName: "Toyota Axio - WP CA-5678",
+    vehiclePlate: "WP CA-5678",
+    owner: "Sajith Rupasinghe",
+    class: "BUDGET",
+    category: "Car",
+    manufacturer: "Toyota",
+    model: "Axio",
+    isInspected: true,
+    isActive: true,
+    dateModified: "2/26/2024 9:15:30 AM",
+  },
+  {
+    id: "3",
+    vehicleName: "Suzuki Alto - CAD-9012",
+    vehiclePlate: "CAD-9012",
+    owner: "Mohammed Shukri",
+    class: "BUDGET",
+    category: "Mini",
+    manufacturer: "Suzuki",
+    model: "Alto",
+    isInspected: false,
+    isActive: true,
+    dateModified: "2/27/2024 10:20:15 AM",
+  },
 ];
+
+const columns = (
+  navigate: ReturnType<typeof useNavigate>,
+  toggleActive: (id: string) => void
+): ColumnDef<Vehicle>[] => [
+    { accessorKey: "vehicleName", header: () => <span className="font-bold text-black">Vehicle Name</span> },
+    { accessorKey: "owner", header: () => <span className="font-bold text-black">Owner</span> },
+    { accessorKey: "class", header: () => <span className="font-bold text-black">Class</span> },
+    { accessorKey: "category", header: () => <span className="font-bold text-black">Category</span> },
+    { accessorKey: "manufacturer", header: () => <span className="font-bold text-black">Manufacturer</span> },
+    { accessorKey: "model", header: () => <span className="font-bold text-black">Model</span> },
+    {
+      accessorKey: "isInspected",
+      header: () => <span className="font-bold text-black text-center block">Inspected</span>,
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          {row.original.isInspected ? (
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+          ) : (
+            <XCircle className="h-5 w-5 text-red-500" />
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "isActive",
+      header: () => <span className="font-bold text-black">Status</span>,
+      cell: ({ row }) => (
+        <Badge variant={row.original.isActive ? "default" : "secondary"}>
+          {row.original.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    { accessorKey: "dateModified", header: () => <span className="font-bold text-black">Modified</span> },
+    {
+      id: "actions",
+      header: () => <span className="text-right font-bold text-black block">Actions</span>,
+      cell: ({ row }) => {
+        const vehicle = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => toggleActive(vehicle.id)}
+              className={vehicle.isActive ? "text-orange-600 border-orange-200" : "text-green-600 border-green-200"}
+            >
+              {vehicle.isActive ? "Deactivate" : "Activate"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/vehicles/edit/${vehicle.id}`)}
+              className="text-blue-600 border-blue-200"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/vehicles/delete/${vehicle.id}`)}
+              className="text-red-600 border-red-200"
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
 export default function ManageVehicles() {
   const navigate = useNavigate();
-  const [filterBy, setFilterBy] = useState("code");
-  const [searchValue, setSearchValue] = useState("");
-  const [vehicles, setVehicles] = useState(mockVehicles);
+  const [filterText, setFilterText] = useState("");
+  const [filterBy, setFilterBy] = useState("vehicleName");
 
-  const filteredVehicles = vehicles.filter((vehicle) => {
-    if (!searchValue) return true;
-    const value = vehicle[filterBy as keyof Vehicle]?.toString().toLowerCase() || "";
-    return value.includes(searchValue.toLowerCase());
+  const {
+    data,
+    setData,
+    handleBulkDelete,
+  } = useDataTable<Vehicle>({
+    initialData: mockVehicles,
   });
+
+  const toggleActive = (id: string) => {
+    setData((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, isActive: !v.isActive } : v))
+    );
+  };
+
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (!filterText) return true;
+      const value = item[filterBy as keyof Vehicle]?.toString().toLowerCase() || "";
+      return value.includes(filterText.toLowerCase());
+    });
+  }, [data, filterText, filterBy]);
+
+  const handleReset = () => {
+    setFilterText("");
+    setFilterBy("vehicleName");
+  };
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
-      <div>
-        <h1 className="text-3xl font-bold text-[#6330B8]">Manage Vehicles</h1>
-        <p className="text-muted-foreground mt-1">View and manage vehicle fleet inventory</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#6330B8]">Vehicle Management</h1>
+          <p className="text-muted-foreground mt-1">Manage all registered vehicles in the system</p>
+        </div>
+        <Button
+          onClick={() => navigate("/admin/vehicles/add")}
+          className="bg-[#6330B8] hover:bg-[#7C3AED]"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Vehicle
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vehicle List</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Filter Section */}
-          <div className="flex items-end gap-4">
-            <div className="flex-1 max-w-xs">
-              <Label>Filter By:</Label>
-              <Select value={filterBy} onValueChange={setFilterBy}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="code">Vehicle Code</SelectItem>
-                  <SelectItem value="registrationNo">Registration No</SelectItem>
-                  <SelectItem value="vehicleClass">Vehicle Class</SelectItem>
-                  <SelectItem value="manufacture">Manufacture</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-1 max-w-md">
-              <Input
-                placeholder="Search..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-              />
-            </div>
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter">Search</Label>
+            <Input
+              id="filter"
+              placeholder="Enter search term..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
           </div>
 
-          {/* Table */}
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-black">Registration No</TableHead>
-                  <TableHead className="font-bold text-black">Code</TableHead>
-                  <TableHead className="font-bold text-black">Class</TableHead>
-                  <TableHead className="font-bold text-black">Manufacture</TableHead>
-                  <TableHead className="font-bold text-black">Model</TableHead>
-                  <TableHead className="font-bold text-black">Insurance Expiry Date</TableHead>
-                  <TableHead className="font-bold text-black">Revenue License Exp Date</TableHead>
-                  <TableHead className="font-bold text-black">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredVehicles.map((vehicle) => (
-                  <TableRow key={vehicle.id}>
-                    <TableCell className="font-medium">{vehicle.registrationNo}</TableCell>
-                    <TableCell>{vehicle.code}</TableCell>
-                    <TableCell>{vehicle.vehicleClass}</TableCell>
-                    <TableCell>{vehicle.manufacture}</TableCell>
-                    <TableCell>{vehicle.model}</TableCell>
-                    <TableCell>{vehicle.insuranceExpiryDate}</TableCell>
-                    <TableCell>{vehicle.revenueLicenseExpDate}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-blue-600"
-                          onClick={() => navigate(`/admin/vehicles/edit/${vehicle.id}`)}
-                        >
-                          Edit
-                        </Button>
-                        <span className="text-muted-foreground">|</span>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-red-600"
-                          onClick={() => navigate(`/admin/vehicles/delete/${vehicle.id}`)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="space-y-2">
+            <Label htmlFor="filterBy">Search By</Label>
+            <Select value={filterBy} onValueChange={setFilterBy}>
+              <SelectTrigger id="filterBy">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vehicleName">Vehicle Name</SelectItem>
+                <SelectItem value="vehiclePlate">Plate Number</SelectItem>
+                <SelectItem value="owner">Owner</SelectItem>
+                <SelectItem value="manufacturer">Manufacturer</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
+
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
+          </div>
+        </div>
       </Card>
+
+      <EnhancedDataTable
+        columns={columns(navigate, toggleActive)}
+        data={filteredData}
+        hideSearch
+        enableBulkDelete
+        onBulkDelete={handleBulkDelete}
+      />
     </div>
   );
 }

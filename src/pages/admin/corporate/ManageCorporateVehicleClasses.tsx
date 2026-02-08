@@ -1,128 +1,123 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useState, useMemo } from "react";
+import { type ColumnDef } from "@tanstack/react-table";
+import { EnhancedDataTable } from "@/components/DataTableLayout";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Edit, Trash, RotateCcw } from "lucide-react";
+import { useDataTable } from "@/hooks/useDataTable";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-interface VehicleClass {
+export type CorporateVehicleClass = {
   id: string;
   className: string;
-  enabled: boolean;
-}
+  description: string;
+};
 
-const mockVehicleClasses: VehicleClass[] = [
-  { id: "1", className: "BUDGET", enabled: true },
-  { id: "2", className: "ECONOMY", enabled: true },
-  { id: "3", className: "STANDARD", enabled: true },
-  { id: "4", className: "VAN", enabled: true },
-  { id: "5", className: "LUXURY", enabled: true },
+const columns = (
+  navigate: ReturnType<typeof useNavigate>
+): ColumnDef<CorporateVehicleClass>[] => [
+    { accessorKey: "className", header: () => <span className="font-bold text-black">Class Name</span> },
+    { accessorKey: "description", header: () => <span className="font-bold text-black">Description</span> },
+    {
+      id: "actions",
+      header: () => <span className="text-right font-bold text-black block">Actions</span>,
+      cell: ({ row }) => {
+        const vClass = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/corporate/vehicle-classes/edit/${vClass.id}`)}
+              className="text-blue-600 border-blue-200"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/corporate/vehicle-classes/delete/${vClass.id}`)}
+              className="text-red-600 border-red-200"
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+const mockClasses: CorporateVehicleClass[] = [
+  { id: "1", className: "Corporate Nano", description: "Small efficient vehicles" },
+  { id: "2", className: "Executive Sedan", description: "Standard business sedans" },
+  { id: "3", className: "Luxury SUV", description: "Premium SUVs for top executives" },
 ];
 
 export default function ManageCorporateVehicleClasses() {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [vehicleClasses, setVehicleClasses] = useState<VehicleClass[]>(mockVehicleClasses);
+  const [filterText, setFilterText] = useState("");
 
-  // Mock corporate name - in real app, fetch based on id
-  const corporateName = id === "1" ? "Codezync PVT Ltd" : id === "2" ? "MILLENNIUM IT" : "Tech Solutions Lanka";
+  const {
+    data,
+    handleBulkDelete,
+  } = useDataTable<CorporateVehicleClass>({
+    initialData: mockClasses,
+  });
 
-  const filteredClasses = vehicleClasses.filter((vc) =>
-    vc.className.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    return data.filter((vClass) => {
+      if (!filterText) return true;
+      return vClass.className.toLowerCase().includes(filterText.toLowerCase());
+    });
+  }, [data, filterText]);
 
-  const toggleEnabled = (classId: string) => {
-    setVehicleClasses((prev) =>
-      prev.map((vc) =>
-        vc.id === classId ? { ...vc, enabled: !vc.enabled } : vc
-      )
-    );
+  const handleReset = () => {
+    setFilterText("");
   };
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => navigate("/admin/corporate/manage")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#6330B8]">Manage Vehicle Classes - {corporateName}</h1>
-          <p className="text-muted-foreground mt-1">Configure vehicle classes for this corporate client</p>
+          <h1 className="text-3xl font-bold text-[#6330B8]">Corporate Vehicle Classes</h1>
+          <p className="text-muted-foreground mt-1">Manage vehicle class availability for corporate clients</p>
         </div>
+        <Button onClick={() => navigate("/admin/corporate/vehicle-classes/add")} className="bg-[#6330B8]">
+          <Plus className="mr-2 h-4 w-4" /> Add Class
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Vehicle Classes</CardTitle>
-              <CardDescription>Showing all {filteredClasses.length} vehicle classes</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter">Search Class</Label>
             <Input
-              placeholder="Filter by class name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
+              id="filter"
+              placeholder="Filter by name..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
             />
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-black">Class Name</TableHead>
-                  <TableHead className="font-bold text-black">Status</TableHead>
-                  <TableHead className="text-right font-bold text-black">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClasses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No vehicle classes found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredClasses.map((vehicleClass) => (
-                    <TableRow key={vehicleClass.id}>
-                      <TableCell className="font-medium">{vehicleClass.className}</TableCell>
-                      <TableCell>
-                        <Badge variant={vehicleClass.enabled ? "default" : "secondary"}>
-                          {vehicleClass.enabled ? "Enabled" : "Disabled"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          onClick={() => toggleEnabled(vehicleClass.id)}
-                          className={
-                            vehicleClass.enabled
-                              ? "bg-orange-500 hover:bg-orange-600 text-white"
-                              : "bg-green-500 hover:bg-green-600 text-white"
-                          }
-                        >
-                          {vehicleClass.enabled ? "Disable" : "Enable"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
           </div>
-        </CardContent>
+        </div>
       </Card>
+
+      <EnhancedDataTable
+        columns={columns(navigate)}
+        data={filteredData}
+        hideSearch
+        enableBulkDelete
+        onBulkDelete={handleBulkDelete}
+        enableExport
+      />
     </div>
   );
 }

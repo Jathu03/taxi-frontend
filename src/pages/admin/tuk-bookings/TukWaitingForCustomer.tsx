@@ -1,8 +1,8 @@
-"use client";
+import { useState, useMemo } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { EnhancedDataTable } from "@/components/DataTableLayout";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Phone, CheckCircle, XCircle } from "lucide-react";
+import { MoreHorizontal, Eye, Phone, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,6 +12,16 @@ import {
 import { useDataTable } from "@/hooks/useDataTable";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type TukWaitingBooking = {
   id: string;
@@ -26,40 +36,42 @@ export type TukWaitingBooking = {
 };
 
 const columns = (navigate: ReturnType<typeof useNavigate>): ColumnDef<TukWaitingBooking>[] => [
-  { accessorKey: "bookingId", header: "Booking ID" },
-  { accessorKey: "customerName", header: "Customer" },
-  { accessorKey: "phoneNumber", header: "Phone" },
-  { accessorKey: "driverName", header: "Driver" },
-  { accessorKey: "vehicleNumber", header: "TUK Number" },
-  { accessorKey: "location", header: "Location" },
-  { accessorKey: "arrivalTime", header: "Arrival Time" },
-  { accessorKey: "waitingTime", header: "Waiting" },
+  { accessorKey: "bookingId", header: () => <span className="font-bold text-black">Booking ID</span> },
+  { accessorKey: "customerName", header: () => <span className="font-bold text-black">Customer</span> },
+  { accessorKey: "phoneNumber", header: () => <span className="font-bold text-black">Phone</span> },
+  { accessorKey: "driverName", header: () => <span className="font-bold text-black">Driver</span> },
+  { accessorKey: "vehicleNumber", header: () => <span className="font-bold text-black">TUK Number</span> },
+  { accessorKey: "location", header: () => <span className="font-bold text-black">Location</span> },
+  { accessorKey: "arrivalTime", header: () => <span className="font-bold text-black whitespace-nowrap">Arrival Time</span> },
+  { accessorKey: "waitingTime", header: () => <span className="font-bold text-black">Waiting</span> },
   {
     id: "actions",
-    header: "Actions",
+    header: () => <span className="text-right font-bold text-black block">Actions</span>,
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => window.open(`tel:${row.original.phoneNumber}`)}>
-              <Phone className="mr-2 h-4 w-4" /> Call Customer
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                navigate(`/admin/tuk/view/${row.original.bookingId}`, {
-                  state: { booking: row.original },
-                })
-              }
-            >
-              <Eye className="mr-2 h-4 w-4" /> View Hire
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => window.open(`tel:${row.original.phoneNumber}`)}>
+                <Phone className="mr-2 h-4 w-4" /> Call Customer
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  navigate(`/admin/tuk/view/${row.original.bookingId}`, {
+                    state: { booking: row.original },
+                  })
+                }
+              >
+                <Eye className="mr-2 h-4 w-4" /> View Hire
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     },
   },
@@ -69,27 +81,13 @@ const mockTukWaitingBookings: TukWaitingBooking[] = [
   { id: "1", bookingId: "TUK-WAIT-001", customerName: "Amanda Clark", phoneNumber: "+94 77 111 2222", driverName: "Saman Kumara", vehicleNumber: "TUK-7890", location: "Colombo 05", arrivalTime: "11:00 AM", waitingTime: "5 min" },
   { id: "2", bookingId: "TUK-WAIT-002", customerName: "Kevin Rodriguez", phoneNumber: "+94 71 222 3333", driverName: "Chaminda Silva", vehicleNumber: "TUK-1122", location: "Nugegoda", arrivalTime: "11:15 AM", waitingTime: "10 min" },
   { id: "3", bookingId: "TUK-WAIT-003", customerName: "Olivia Murphy", phoneNumber: "+94 76 333 4444", driverName: "Nimal Perera", vehicleNumber: "TUK-1234", location: "Fort", arrivalTime: "11:30 AM", waitingTime: "7 min" },
-  { id: "4", bookingId: "TUK-WAIT-004", customerName: "Brandon Kelly", phoneNumber: "+94 75 444 5555", driverName: "Sunil Silva", vehicleNumber: "TUK-5678", location: "Bambalapitiya", arrivalTime: "11:45 AM", waitingTime: "3 min" },
-  { id: "5", bookingId: "TUK-WAIT-005", customerName: "Sophia Rivera", phoneNumber: "+94 74 555 6666", driverName: "Kamal Fernando", vehicleNumber: "TUK-2468", location: "Kollupitiya", arrivalTime: "12:00 PM", waitingTime: "12 min" },
-  { id: "6", bookingId: "TUK-WAIT-006", customerName: "Zachary Cooper", phoneNumber: "+94 73 666 7777", driverName: "Ajith Kumar", vehicleNumber: "TUK-1357", location: "Wellawatta", arrivalTime: "12:15 PM", waitingTime: "8 min" },
-  { id: "7", bookingId: "TUK-WAIT-007", customerName: "Isabella Cox", phoneNumber: "+94 72 777 8888", driverName: "Chaminda Dias", vehicleNumber: "TUK-3456", location: "Maradana", arrivalTime: "12:30 PM", waitingTime: "15 min" },
-  { id: "8", bookingId: "TUK-WAIT-008", customerName: "Austin Ward", phoneNumber: "+94 77 888 9999", driverName: "Eranga Bandara", vehicleNumber: "TUK-2345", location: "Slave Island", arrivalTime: "12:45 PM", waitingTime: "6 min" },
-  { id: "9", bookingId: "TUK-WAIT-009", customerName: "Hannah Bailey", phoneNumber: "+94 71 999 0000", driverName: "Fawaz Mohomed", vehicleNumber: "TUK-6789", location: "Havelock Town", arrivalTime: "01:00 PM", waitingTime: "4 min" },
-  { id: "10", bookingId: "TUK-WAIT-010", customerName: "Jordan Foster", phoneNumber: "+94 76 000 1111", driverName: "Hasitha Gamage", vehicleNumber: "TUK-4680", location: "Kirulapone", arrivalTime: "01:15 PM", waitingTime: "9 min" },
-  { id: "11", bookingId: "TUK-WAIT-011", customerName: "Alexis Gray", phoneNumber: "+94 75 111 2222", driverName: "Indika Rathnayake", vehicleNumber: "TUK-8024", location: "Narahenpita", arrivalTime: "01:30 PM", waitingTime: "11 min" },
-  { id: "12", bookingId: "TUK-WAIT-012", customerName: "Dylan James", phoneNumber: "+94 74 222 3333", driverName: "Janaka Dissanayake", vehicleNumber: "TUK-1596", location: "Nawala", arrivalTime: "01:45 PM", waitingTime: "5 min" },
-  { id: "13", bookingId: "TUK-WAIT-013", customerName: "Madison Powell", phoneNumber: "+94 73 333 4444", driverName: "Kasun Jayawardena", vehicleNumber: "TUK-7531", location: "Rajagiriya", arrivalTime: "02:00 PM", waitingTime: "13 min" },
-  { id: "14", bookingId: "TUK-WAIT-014", customerName: "Cameron Long", phoneNumber: "+94 72 444 5555", driverName: "Lakmal Gunasekara", vehicleNumber: "TUK-9876", location: "Borella", arrivalTime: "02:15 PM", waitingTime: "7 min" },
-  { id: "15", bookingId: "TUK-WAIT-015", customerName: "Allison Hughes", phoneNumber: "+94 77 555 6666", driverName: "Malinga Perera", vehicleNumber: "TUK-3210", location: "Kotahena", arrivalTime: "02:30 PM", waitingTime: "10 min" },
-  { id: "16", bookingId: "TUK-WAIT-016", customerName: "Trevor Price", phoneNumber: "+94 71 666 7777", driverName: "Oshadha Fernando", vehicleNumber: "TUK-9871", location: "Pettah", arrivalTime: "02:45 PM", waitingTime: "6 min" },
-  { id: "17", bookingId: "TUK-WAIT-017", customerName: "Courtney Bennett", phoneNumber: "+94 76 777 8888", driverName: "Pradeep Kumara", vehicleNumber: "TUK-2109", location: "Kelaniya", arrivalTime: "03:00 PM", waitingTime: "14 min" },
-  { id: "18", bookingId: "TUK-WAIT-018", customerName: "Seth Wood", phoneNumber: "+94 75 888 9999", driverName: "Ramesh Thilakarathne", vehicleNumber: "TUK-5432", location: "Wattala", arrivalTime: "03:15 PM", waitingTime: "8 min" },
-  { id: "19", bookingId: "TUK-WAIT-019", customerName: "Paige Barnes", phoneNumber: "+94 74 999 0000", driverName: "Saman Wijesinghe", vehicleNumber: "TUK-8765", location: "Ja-Ela", arrivalTime: "03:30 PM", waitingTime: "12 min" },
-  { id: "20", bookingId: "TUK-WAIT-020", customerName: "Cody Ross", phoneNumber: "+94 73 000 1111", driverName: "Nimal Perera", vehicleNumber: "TUK-1234", location: "Negombo", arrivalTime: "03:45 PM", waitingTime: "5 min" },
 ];
 
 export default function TukWaitingForCustomer() {
   const navigate = useNavigate();
+  const [filterText, setFilterText] = useState("");
+  const [filterBy, setFilterBy] = useState("customerName");
+
   const {
     data,
     handleBulkDelete,
@@ -97,21 +95,69 @@ export default function TukWaitingForCustomer() {
     initialData: mockTukWaitingBookings,
   });
 
+  const filteredData = useMemo(() => {
+    return data.filter((booking) => {
+      if (!filterText) return true;
+      const value = booking[filterBy as keyof TukWaitingBooking]?.toString().toLowerCase() || "";
+      return value.includes(filterText.toLowerCase());
+    });
+  }, [data, filterText, filterBy]);
+
+  const handleReset = () => {
+    setFilterText("");
+    setFilterBy("customerName");
+  };
+
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Waiting for Customer</h1>
-          <p className="text-muted-foreground">Drivers waiting at pickup location</p>
+          <h1 className="text-3xl font-bold text-[#6330B8]">Waiting for Customer</h1>
+          <p className="text-muted-foreground mt-1">Drivers waiting at pickup location</p>
         </div>
-        <Badge className="text-lg px-4 py-2">{data.length} Waiting</Badge>
+        <Badge className="text-lg px-4 py-2 bg-blue-600">{data.length} Waiting</Badge>
       </div>
+
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter">Search</Label>
+            <Input
+              id="filter"
+              placeholder="Enter search term..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterBy">Search By</Label>
+            <Select value={filterBy} onValueChange={setFilterBy}>
+              <SelectTrigger id="filterBy">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customerName">Customer</SelectItem>
+                <SelectItem value="bookingId">Booking ID</SelectItem>
+                <SelectItem value="driverName">Driver</SelectItem>
+                <SelectItem value="vehicleNumber">TUK Number</SelectItem>
+                <SelectItem value="phoneNumber">Phone</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <EnhancedDataTable
         columns={columns(navigate)}
-        data={data}
-        searchKey="customerName"
-        searchPlaceholder="Search waiting bookings..."
+        data={filteredData}
+        hideSearch
         enableBulkDelete
         onBulkDelete={handleBulkDelete}
         enableExport

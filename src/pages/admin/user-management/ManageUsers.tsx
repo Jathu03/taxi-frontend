@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
-import { getUsers, type User as ApiUser } from "@/api";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { Plus, Edit, Trash, Key, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import { type ColumnDef } from "@tanstack/react-table";
+import { EnhancedDataTable } from "@/components/DataTableLayout";
+import { useDataTable } from "@/hooks/useDataTable";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface User {
   id: string;
@@ -20,100 +27,94 @@ interface User {
   role: string;
 }
 
+const mockUsers: User[] = [
+  { id: "1", userName: "Dj", email: "judeferdinands585@gmail.com", firstName: "cj", lastName: "-", phoneNumber: "0726208396", role: "User" },
+  { id: "2", userName: "0778508595", email: "0778508595@gmail.com", firstName: "Mohamed", lastName: "rifkhan", phoneNumber: "0778508595", role: "Driver" },
+  { id: "3", userName: "0715892313", email: "0715892313@gmail.com", firstName: "Ranadinghe", lastName: "Arachchige Suresh Nilanka Chandana", phoneNumber: "0715892313", role: "Driver" },
+];
+
+const columns = (
+  navigate: ReturnType<typeof useNavigate>
+): ColumnDef<User>[] => [
+    { accessorKey: "userName", header: () => <span className="font-bold text-black">User Name</span> },
+    { accessorKey: "email", header: () => <span className="font-bold text-black">Email</span> },
+    { accessorKey: "firstName", header: () => <span className="font-bold text-black">First Name</span> },
+    { accessorKey: "lastName", header: () => <span className="font-bold text-black">Last Name</span> },
+    { accessorKey: "phoneNumber", header: () => <span className="font-bold text-black">Phone Number</span> },
+    {
+      accessorKey: "role",
+      header: () => <span className="font-bold text-black">Role</span>,
+      cell: ({ row }) => (
+        row.original.role ? (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            {row.original.role}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <span className="text-right font-bold text-black block">Actions</span>,
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/users/edit/${user.id}`)}
+              className="text-blue-600 border-blue-200"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/users/reset-password/${user.id}`)}
+              className="text-orange-600 border-orange-200"
+            >
+              <Key className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/admin/users/delete/${user.id}`)}
+              className="text-red-600 border-red-200"
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
 export default function ManageUsers() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterBy, setFilterBy] = useState("phoneNo");
+  const [filterText, setFilterText] = useState("");
+  const [filterBy, setFilterBy] = useState("phoneNumber");
 
-  // Mock data
-  const [users] = useState<User[]>([
-    {
-      id: "1",
-      userName: "Dj",
-      email: "judeferdinands585@gmail.com",
-      firstName: "cj",
-      lastName: "-",
-      phoneNumber: "0726208396",
-      role: "",
-    },
-    {
-      id: "2",
-      userName: "0778508595",
-      email: "0778508595@gmail.com",
-      firstName: "Mohamed",
-      lastName: "rifkhan",
-      phoneNumber: "0778508595",
-      role: "Driver",
-    },
-    {
-      id: "3",
-      userName: "0715892313",
-      email: "0715892313@gmail.com",
-      firstName: "Ranadinghe",
-      lastName: "Arachchige Suresh Nilanka Chandana",
-      phoneNumber: "0715892313",
-      role: "Driver",
-    },
-    {
-      id: "4",
-      userName: "admin",
-      email: "admin@casons.com",
-      firstName: "System",
-      lastName: "Administrator",
-      phoneNumber: "0112345678",
-      role: "Administrator",
-    },
-    {
-      id: "5",
-      userName: "john_driver",
-      email: "john.driver@gmail.com",
-      firstName: "John",
-      lastName: "Silva",
-      phoneNumber: "0771234567",
-      role: "Driver",
-    },
-    {
-      id: "6",
-      userName: "mary_cc",
-      email: "mary.center@casons.com",
-      firstName: "Mary",
-      lastName: "Perera",
-      phoneNumber: "0772345678",
-      role: "CallCenterAgent",
-    },
-    {
-      id: "7",
-      userName: "corp_user1",
-      email: "corporate@company.com",
-      firstName: "David",
-      lastName: "Fernando",
-      phoneNumber: "0773456789",
-      role: "Corporate",
-    },
-    {
-      id: "8",
-      userName: "accountant1",
-      email: "accounts@casons.com",
-      firstName: "Sarah",
-      lastName: "Jayawardena",
-      phoneNumber: "0774567890",
-      role: "Accountant",
-    },
-  ]);
-
-  const filteredUsers = users.filter((user) => {
-    const search = searchTerm.toLowerCase();
-    if (filterBy === "phoneNo") {
-      return user.phoneNumber.includes(searchTerm);
-    }
-    return (
-      user.userName.toLowerCase().includes(search) ||
-      user.email.toLowerCase().includes(search) ||
-      user.firstName.toLowerCase().includes(search) ||
-      user.lastName.toLowerCase().includes(search) ||
-      user.phoneNumber.includes(search)
-    );
+  const {
+    data,
+    handleBulkDelete,
+  } = useDataTable<User>({
+    initialData: mockUsers,
   });
+
+  const filteredData = useMemo(() => {
+    return data.filter((user) => {
+      if (!filterText) return true;
+      const value = user[filterBy as keyof User]?.toString().toLowerCase() || "";
+      return value.includes(filterText.toLowerCase());
+    });
+  }, [data, filterText, filterBy]);
+
+  const handleReset = () => {
+    setFilterText("");
+    setFilterBy("phoneNumber");
+  };
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
@@ -124,110 +125,56 @@ export default function ManageUsers() {
         </div>
         <Button
           onClick={() => navigate("/admin/users/add")}
-          className="bg-[#6330B8] hover:bg-[#6330B8]/90"
+          className="bg-[#6330B8] hover:bg-[#7C3AED]"
         >
           <Plus className="mr-2 h-4 w-4" />
           Create New User
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>User List</CardTitle>
-          <CardDescription>View and manage all system users</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Filter By:</label>
-              <div className="flex gap-2">
-                <Select value={filterBy} onValueChange={setFilterBy}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="phoneNo">Phone No</SelectItem>
-                    <SelectItem value="all">All Fields</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder={filterBy === "phoneNo" ? "Search by phone number..." : "Search users..."}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 max-w-md"
-                />
-              </div>
-            </div>
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter">Search</Label>
+            <Input
+              id="filter"
+              placeholder="Enter search term..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-black">User Name</TableHead>
-                  <TableHead className="font-bold text-black">Email</TableHead>
-                  <TableHead className="font-bold text-black">First Name</TableHead>
-                  <TableHead className="font-bold text-black">Last Name</TableHead>
-                  <TableHead className="font-bold text-black">Phone Number</TableHead>
-                  <TableHead className="font-bold text-black">Role</TableHead>
-                  <TableHead className="text-right font-bold text-black">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.userName}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.firstName}</TableCell>
-                      <TableCell>{user.lastName}</TableCell>
-                      <TableCell>{user.phoneNumber}</TableCell>
-                      <TableCell>
-                        {user.role ? (
-                          <Badge variant="outline">{user.role}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="sm"
-                            className="bg-blue-500 hover:bg-blue-600 text-white"
-                            onClick={() => navigate(`/admin/users/edit/${user.id}`)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="bg-orange-500 hover:bg-orange-600 text-white"
-                            onClick={() => navigate(`/admin/users/reset-password/${user.id}`)}
-                          >
-                            Reset Password
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="bg-red-500 hover:bg-red-600 text-white"
-                            onClick={() => navigate(`/admin/users/delete/${user.id}`)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          <div className="space-y-2">
+            <Label htmlFor="filterBy">Search By</Label>
+            <Select value={filterBy} onValueChange={setFilterBy}>
+              <SelectTrigger id="filterBy">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="phoneNumber">Phone Number</SelectItem>
+                <SelectItem value="userName">User Name</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="firstName">First Name</SelectItem>
+                <SelectItem value="lastName">Last Name</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
+
+          <div className="space-y-2 flex items-end gap-2">
+            <Button onClick={handleReset} variant="outline" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            </Button>
+          </div>
+        </div>
       </Card>
+
+      <EnhancedDataTable
+        columns={columns(navigate)}
+        data={filteredData}
+        hideSearch
+        enableBulkDelete
+        onBulkDelete={handleBulkDelete}
+      />
     </div>
   );
 }
