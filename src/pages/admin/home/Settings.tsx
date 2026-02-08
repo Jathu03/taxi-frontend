@@ -4,26 +4,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { menuItems, type MenuItem } from "@/constants/menuItems";
-import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
+import { menuItems } from "@/constants/menuItems";
+import { cn } from "@/lib/utils";
 import {
     Settings as SettingsIcon,
-    Edit2,
     RotateCcw,
-    UserCheck
+    ChevronRight,
+    LayoutGrid,
 } from "lucide-react";
 
 const ROLES = ["admin", "accountant", "callCenterAgent", "corporate", "driver"];
 
 export default function Settings() {
     const { toast } = useToast();
+    const [activeCategory, setActiveCategory] = useState<string>("Main Sections");
     const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>(() => {
         const saved = localStorage.getItem("sidebar_permissions");
         if (saved) {
@@ -53,7 +47,37 @@ export default function Settings() {
         return defaults;
     });
 
-    const handleToggle = (role: string, key: string, checked: boolean, parentKey?: string) => {
+    const categories = useMemo(() => {
+        const itemsWithChildren = menuItems.filter(item => item.children && item.children.length > 0);
+        return [
+            { id: "Main Sections", title: "Main Sections", icon: LayoutGrid },
+            ...itemsWithChildren.map(item => ({ id: item.title, title: item.title, icon: item.icon }))
+        ];
+    }, []);
+
+    const activeRows = useMemo(() => {
+        if (activeCategory === "Main Sections") {
+            return menuItems.map(item => ({
+                key: item.title,
+                title: item.title,
+                icon: item.icon,
+                isChild: false,
+                parentKey: null,
+                childrenCount: item.children?.length || 0
+            }));
+        }
+        const parent = menuItems.find(item => item.title === activeCategory);
+        return parent?.children?.map(child => ({
+            key: `${parent.title}:${child.title}`,
+            title: child.title,
+            icon: child.icon || parent.icon,
+            isChild: true,
+            parentKey: parent.title,
+            childrenCount: 0
+        })) || [];
+    }, [activeCategory]);
+
+    const handleToggle = (role: string, key: string, checked: boolean, parentKey?: string | null) => {
         setPermissions(prev => {
             const next = {
                 ...prev,
@@ -72,25 +96,19 @@ export default function Settings() {
         });
     };
 
-    const handleSelectAllSub = (role: string, parent: MenuItem, checked: boolean) => {
+    const handleSelectAll = (role: string, checked: boolean) => {
         setPermissions(prev => {
             const next = { ...prev, [role]: { ...(prev[role] || {}) } };
-            if (checked) next[role][parent.title] = true;
-            parent.children?.forEach(child => {
-                next[role][`${parent.title}:${child.title}`] = checked;
-            });
-            return next;
-        });
-    };
-
-    const handleSelectAllMain = (role: string, checked: boolean) => {
-        setPermissions(prev => {
-            const next = { ...prev, [role]: { ...(prev[role] || {}) } };
-            menuItems.forEach(item => {
-                next[role][item.title] = checked;
-                item.children?.forEach(child => {
-                    next[role][`${item.title}:${child.title}`] = checked;
-                });
+            activeRows.forEach(row => {
+                next[role][row.key] = checked;
+                if (!row.isChild) {
+                    const item = menuItems.find(i => i.title === row.key);
+                    item?.children?.forEach(child => {
+                        next[role][`${row.key}:${child.title}`] = checked;
+                    });
+                } else if (checked && row.parentKey) {
+                    next[role][row.parentKey] = true;
+                }
             });
             return next;
         });
@@ -107,187 +125,147 @@ export default function Settings() {
     };
 
     return (
-        <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/20 to-blue-50/20 min-h-screen">
+        <div className="p-6 space-y-6 bg-gradient-to-br from-white via-slate-50 to-blue-50/20 min-h-screen font-sans">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-[#6330B8] tracking-tight">Access Control Center</h1>
-                    <p className="text-muted-foreground mt-1 text-lg">Define granular permissions across all system modules</p>
+                    <h1 className="text-4xl font-black text-[#6330B8] tracking-tight">Access Control Center</h1>
+                    <p className="text-slate-500 mt-2 text-lg font-medium">Configure granular module visibility and permissions across roles</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button onClick={handleResetDefaults} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
+                    <Button onClick={handleResetDefaults} variant="outline" className="border-red-100 text-red-500 hover:bg-red-50 hover:text-red-600 transition-all font-bold">
                         <RotateCcw className="mr-2 h-4 w-4" /> Reset to Defaults
                     </Button>
-                    <Button onClick={handleSave} className="bg-[#6330B8] hover:bg-[#5225a1] shadow-md shadow-purple-200 px-6">
+                    <Button onClick={handleSave} className="bg-[#6330B8] hover:bg-[#5225a1] shadow-lg shadow-purple-200 px-8 py-6 text-lg font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]">
                         Confirm & Apply Changes
                     </Button>
                 </div>
             </div>
 
-            <Card className="border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#6330B8]/5 to-transparent border-b">
-                    <div>
-                        <CardTitle className="text-xl font-bold">Module Visibility</CardTitle>
-                        <CardDescription>Main sidebar sections and their access per role.</CardDescription>
+            <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-3xl grid grid-cols-12 min-h-[700px]">
+                {/* Sidebar */}
+                <aside className="col-span-3 border-r bg-slate-50/30 p-4 space-y-2">
+                    <div className="px-4 py-2 mb-4">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Categories</span>
                     </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 border-b">
-                                    <th className="text-left p-6 font-bold text-slate-600 w-[300px]">Section Name</th>
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setActiveCategory(cat.id)}
+                            className={cn(
+                                "w-full flex items-center gap-3 px-4 py-4 rounded-2xl transition-all duration-200 group relative",
+                                activeCategory === cat.id
+                                    ? "bg-white shadow-md text-[#6330B8] ring-1 ring-purple-100"
+                                    : "text-slate-500 hover:bg-white hover:text-slate-900"
+                            )}
+                        >
+                            <div className={cn(
+                                "p-2 rounded-xl transition-colors",
+                                activeCategory === cat.id ? "bg-purple-100 text-[#6330B8]" : "bg-slate-100 text-slate-400 group-hover:bg-purple-50 group-hover:text-purple-400"
+                            )}>
+                                <cat.icon className="h-5 w-5" />
+                            </div>
+                            <span className="font-bold whitespace-nowrap">{cat.title}</span>
+                            {activeCategory === cat.id && (
+                                <ChevronRight className="h-4 w-4 ml-auto text-purple-400" />
+                            )}
+                        </button>
+                    ))}
+                </aside>
+
+                {/* Content */}
+                <main className="col-span-9 p-0 flex flex-col">
+                    <div className="p-8 border-b bg-white">
+                        <h2 className="text-2xl font-black text-slate-800">{activeCategory}</h2>
+                        <p className="text-slate-500 font-medium italic">
+                            {activeCategory === "Main Sections"
+                                ? "Manage which top-level modules are visible to each role."
+                                : `Manage specific sub-permissions for the ${activeCategory} module.`}
+                        </p>
+                    </div>
+
+                    <div className="flex-1 overflow-auto">
+                        <table className="w-full text-sm">
+                            <thead className="sticky top-0 z-10">
+                                <tr className="bg-slate-50/80 backdrop-blur-md border-b">
+                                    <th className="text-left p-6 font-black text-slate-600 w-[350px]">
+                                        <div className="flex items-center gap-2">
+                                            <span className="uppercase tracking-widest text-xs">Section / Feature</span>
+                                        </div>
+                                    </th>
                                     {ROLES.map(role => (
-                                        <th key={role} className="p-6 font-bold text-slate-600 capitalize">
-                                            <div className="flex flex-col items-center gap-1">
-                                                <span>{role}</span>
-                                                <div className="flex gap-1">
+                                        <th key={role} className="p-6 font-black text-slate-600 capitalize">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <span className="text-xs uppercase tracking-widest">{role}</span>
+                                                <div className="flex gap-2 bg-white p-1 rounded-lg border shadow-sm">
                                                     <button
-                                                        onClick={() => handleSelectAllMain(role, true)}
-                                                        className="text-[10px] text-purple-600 hover:text-purple-800 hover:underline"
+                                                        onClick={() => handleSelectAll(role, true)}
+                                                        className="px-2 py-0.5 text-[9px] font-black text-purple-600 hover:bg-purple-50 rounded"
                                                     >
-                                                        All
+                                                        ALL
                                                     </button>
-                                                    <span className="text-[10px] text-slate-300">|</span>
+                                                    <div className="w-[1px] bg-slate-100" />
                                                     <button
-                                                        onClick={() => handleSelectAllMain(role, false)}
-                                                        className="text-[10px] text-slate-500 hover:text-slate-700 hover:underline"
+                                                        onClick={() => handleSelectAll(role, false)}
+                                                        className="px-2 py-0.5 text-[9px] font-black text-slate-400 hover:bg-slate-50 rounded"
                                                     >
-                                                        None
+                                                        NONE
                                                     </button>
                                                 </div>
                                             </div>
                                         </th>
                                     ))}
-                                    <th className="text-right p-6 font-bold text-slate-600">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {menuItems.map(item => (
-                                    <tr key={item.title} className="hover:bg-purple-50/40 transition-colors group">
+                                {activeRows.map(row => (
+                                    <tr key={row.key} className="hover:bg-purple-50/30 transition-colors group">
                                         <td className="p-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-purple-100 rounded-lg text-[#6330B8]">
-                                                    <item.icon className="h-5 w-5" />
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn(
+                                                    "p-2.5 rounded-xl transition-all",
+                                                    row.isChild ? "bg-slate-50 text-slate-400 ml-4" : "bg-purple-50 text-[#6330B8] shadow-sm shadow-purple-50"
+                                                )}>
+                                                    <row.icon className={cn(row.isChild ? "h-4 w-4" : "h-5 w-5")} />
                                                 </div>
                                                 <div>
-                                                    <span className="font-bold text-slate-900 text-base">{item.title}</span>
-                                                    {item.children && <p className="text-xs text-muted-foreground">{item.children.length} Subsections</p>}
+                                                    <span className={cn("font-black text-slate-800", row.isChild ? "text-sm text-slate-600" : "text-lg tracking-tight")}>{row.title}</span>
+                                                    {!row.isChild && row.childrenCount > 0 && (
+                                                        <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mt-0.5">{row.childrenCount} Detailed Settings Available</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
                                         {ROLES.map(role => (
                                             <td key={role} className="p-6">
                                                 <div className="flex justify-center">
-                                                    <Checkbox
-                                                        checked={permissions[role]?.[item.title] || false}
-                                                        onCheckedChange={(checked) => handleToggle(role, item.title, !!checked)}
-                                                        disabled={role === 'admin' && item.title === 'Settings'}
-                                                        className="h-5 w-5 border-slate-300 data-[state=checked]:bg-[#6330B8] data-[state=checked]:border-[#6330B8]"
-                                                    />
+                                                    <div className="relative group/check">
+                                                        <Checkbox
+                                                            id={`${role}-${row.key}`}
+                                                            checked={permissions[role]?.[row.key] || false}
+                                                            onCheckedChange={(checked) => handleToggle(role, row.key, !!checked, row.parentKey)}
+                                                            disabled={role === 'admin' && row.key === 'Settings'}
+                                                            className="h-6 w-6 rounded-lg border-2 border-slate-200 transition-all data-[state=checked]:bg-[#6330B8] data-[state=checked]:border-[#6330B8] hover:border-purple-300"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </td>
                                         ))}
-                                        <td className="p-6 text-right">
-                                            {item.children && item.children.length > 0 ? (
-                                                <Sheet>
-                                                    <SheetTrigger asChild>
-                                                        <Button
-                                                            variant="default"
-                                                            size="sm"
-                                                            className="bg-white border text-purple-600 border-purple-200 hover:bg-purple-50 font-semibold shadow-sm rounded-full px-4"
-                                                        >
-                                                            <Edit2 className="h-3.5 w-3.5 mr-2" />
-                                                            Configure Sub-permissions
-                                                        </Button>
-                                                    </SheetTrigger>
-                                                    <SheetContent className="sm:max-w-xl border-l shadow-2xl overflow-y-auto bg-slate-50/50">
-                                                        <SheetHeader className="mb-8 border-b pb-6 bg-white -mx-6 px-6 py-8">
-                                                            <div className="flex items-center gap-4 mb-2">
-                                                                <div className="p-3 bg-purple-100 rounded-2xl text-[#6330B8]">
-                                                                    <item.icon className="h-8 w-8" />
-                                                                </div>
-                                                                <div>
-                                                                    <SheetTitle className="text-3xl font-black text-slate-900">{item.title}</SheetTitle>
-                                                                    <SheetDescription className="text-base text-slate-500 font-medium">
-                                                                        Detailed sub-section permissions for this module.
-                                                                    </SheetDescription>
-                                                                </div>
-                                                            </div>
-                                                        </SheetHeader>
-
-                                                        <div className="space-y-6">
-                                                            {ROLES.map(role => (
-                                                                <Card key={role} className="border-none shadow-sm overflow-hidden ring-1 ring-slate-200">
-                                                                    <div className="p-4 bg-white flex items-center justify-between border-b">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <UserCheck className="h-5 w-5 text-purple-600" />
-                                                                            <h3 className="font-bold text-lg text-slate-800 capitalize">{role} Access</h3>
-                                                                        </div>
-                                                                        <div className="flex gap-2">
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                size="sm"
-                                                                                className="h-8 text-xs font-bold border-purple-100 text-purple-700 hover:bg-purple-50"
-                                                                                onClick={() => handleSelectAllSub(role, item, true)}
-                                                                            >
-                                                                                Select All
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                size="sm"
-                                                                                className="h-8 text-xs font-bold border-slate-100 text-slate-600 hover:bg-slate-50"
-                                                                                onClick={() => handleSelectAllSub(role, item, false)}
-                                                                            >
-                                                                                Clear All
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-                                                                    <CardContent className="p-4 bg-slate-50/30">
-                                                                        <div className="grid grid-cols-1 gap-2">
-                                                                            {item.children?.map(child => (
-                                                                                <div
-                                                                                    key={child.title}
-                                                                                    className="flex items-center space-x-3 p-3 rounded-lg border border-transparent hover:border-purple-100 hover:bg-white transition-all cursor-pointer group/item"
-                                                                                    onClick={() => handleToggle(role, `${item.title}:${child.title}`, !permissions[role]?.[`${item.title}:${child.title}`], item.title)}
-                                                                                >
-                                                                                    <Checkbox
-                                                                                        id={`${role}-${item.title}-${child.title}`}
-                                                                                        checked={permissions[role]?.[`${item.title}:${child.title}`] || false}
-                                                                                        onCheckedChange={(checked) => handleToggle(role, `${item.title}:${child.title}`, !!checked, item.title)}
-                                                                                        disabled={role === 'admin' && item.title === 'Settings'}
-                                                                                        className="h-5 w-5 border-slate-300 pointer-events-none data-[state=checked]:bg-[#6330B8] data-[state=checked]:border-[#6330B8]"
-                                                                                    />
-                                                                                    <Label
-                                                                                        className="flex-1 cursor-pointer font-semibold text-slate-700 group-hover/item:text-[#6330B8] transition-colors"
-                                                                                    >
-                                                                                        {child.title}
-                                                                                    </Label>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </CardContent>
-                                                                </Card>
-                                                            ))}
-                                                        </div>
-                                                        <div className="mt-12 mb-8">
-                                                            <Button onClick={handleSave} className="w-full py-6 text-lg font-bold bg-[#6330B8] hover:bg-[#5225a1] shadow-lg shadow-purple-100 rounded-xl">
-                                                                Confirm All Changes
-                                                            </Button>
-                                                        </div>
-                                                    </SheetContent>
-                                                </Sheet>
-                                            ) : (
-                                                <span className="text-slate-400 text-xs font-medium italic">No sub-sections</span>
-                                            )}
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+                        {activeRows.length === 0 && (
+                            <div className="flex flex-col items-center justify-center p-20 text-center">
+                                <div className="p-6 bg-slate-50 rounded-full mb-4">
+                                    <SettingsIcon className="h-12 w-12 text-slate-300 animate-pulse" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900">No settings found</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto">This module doesn't have any specific sub-permissions configured.</p>
+                            </div>
+                        )}
                     </div>
-                </CardContent>
+                </main>
             </Card>
-
         </div>
     );
 }
