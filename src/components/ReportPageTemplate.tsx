@@ -164,7 +164,11 @@ export function ReportPageTemplate<T extends Record<string, any>>({
           )}
 
           {enablePDF && (
-            <Button onClick={() => handleGeneratePDF("save")} className="gap-2">
+            <Button
+              onClick={() => handleGeneratePDF("save")}
+              variant="outline"
+              className="gap-2 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 border-red-200"
+            >
               <FileText className="h-4 w-4" /> PDF
             </Button>
           )}
