@@ -95,6 +95,7 @@ export default function ManageUsers() {
   const navigate = useNavigate();
   const [filterText, setFilterText] = useState("");
   const [filterBy, setFilterBy] = useState("phoneNumber");
+  const [filterRole, setFilterRole] = useState("all");
 
   const {
     data,
@@ -105,16 +106,26 @@ export default function ManageUsers() {
 
   const filteredData = useMemo(() => {
     return data.filter((user) => {
-      if (!filterText) return true;
-      const value = user[filterBy as keyof User]?.toString().toLowerCase() || "";
-      return value.includes(filterText.toLowerCase());
+      // Text Search
+      if (filterText) {
+        const value = user[filterBy as keyof User]?.toString().toLowerCase() || "";
+        if (!value.includes(filterText.toLowerCase())) return false;
+      }
+
+      // Role Filter
+      if (filterRole !== "all" && user.role !== filterRole) return false;
+
+      return true;
     });
-  }, [data, filterText, filterBy]);
+  }, [data, filterText, filterBy, filterRole]);
 
   const handleReset = () => {
     setFilterText("");
     setFilterBy("phoneNumber");
+    setFilterRole("all");
   };
+
+  const uniqueRoles = useMemo(() => [...new Set(data.filter(u => u.role).map(u => u.role))], [data]);
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
@@ -156,6 +167,22 @@ export default function ManageUsers() {
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="firstName">First Name</SelectItem>
                 <SelectItem value="lastName">Last Name</SelectItem>
+                <SelectItem value="role">Role</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterRole">Role</Label>
+            <Select value={filterRole} onValueChange={setFilterRole}>
+              <SelectTrigger id="filterRole">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                {uniqueRoles.map(role => (
+                  <SelectItem key={role} value={role}>{role}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

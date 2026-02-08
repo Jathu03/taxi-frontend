@@ -229,6 +229,26 @@ export default function CompletedBookingsReport() {
           ],
           defaultValue: "all",
         },
+        {
+          key: "hireType",
+          label: "Hire Type",
+          options: [
+            { label: "All Types", value: "all" },
+            { label: "Point-to-Point", value: "Point-to-Point" },
+            { label: "Budget", value: "Budget" },
+          ],
+          defaultValue: "all",
+        },
+        {
+          key: "testBooking",
+          label: "Test Booking",
+          options: [
+            { label: "All", value: "all" },
+            { label: "Test Only", value: "Yes" },
+            { label: "Real Only", value: "No" },
+          ],
+          defaultValue: "all",
+        },
       ]}
     />
   );

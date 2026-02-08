@@ -318,12 +318,12 @@ const tableColumns: ColumnDef<UnifiedModification>[] = [
         <Badge
           variant="outline"
           className={`gap-1 ${source === "App"
-              ? isTuk
-                ? "border-yellow-500 text-yellow-700 bg-yellow-50"
-                : "border-green-600 text-green-700 bg-green-50"
-              : isTuk
-                ? "border-yellow-500 text-yellow-700 bg-yellow-50"
-                : "border-blue-500 text-blue-700 bg-blue-50"
+            ? isTuk
+              ? "border-yellow-500 text-yellow-700 bg-yellow-50"
+              : "border-green-600 text-green-700 bg-green-50"
+            : isTuk
+              ? "border-yellow-500 text-yellow-700 bg-yellow-50"
+              : "border-blue-500 text-blue-700 bg-blue-50"
             }`}
         >
           {source === "App" ? (
@@ -595,6 +595,21 @@ export default function BookingModificationReport() {
               { label: "User (Admin/Agent)", value: "USER" },
               { label: "Driver", value: "DRIVER" },
               { label: "System", value: "SYSTEM" },
+            ],
+            defaultValue: "all",
+          },
+          {
+            key: "fieldName",
+            label: "Field Changed",
+            options: [
+              { label: "All Fields", value: "all" },
+              { label: "Status", value: "Status" },
+              { label: "Pickup Time", value: "Pickup Time" },
+              { label: "Pickup Location", value: "Pickup Location" },
+              { label: "Drop Address", value: "Drop Address" },
+              { label: "Driver", value: "Driver" },
+              { label: "Fare", value: "Fare" },
+              { label: "Vehicle Class", value: "Vehicle Class" },
             ],
             defaultValue: "all",
           },

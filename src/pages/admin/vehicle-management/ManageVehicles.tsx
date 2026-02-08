@@ -147,6 +147,10 @@ export default function ManageVehicles() {
   const navigate = useNavigate();
   const [filterText, setFilterText] = useState("");
   const [filterBy, setFilterBy] = useState("vehicleName");
+  const [filterActive, setFilterActive] = useState("all");
+  const [filterInspected, setFilterInspected] = useState("all");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
 
   const {
     data,
@@ -164,16 +168,46 @@ export default function ManageVehicles() {
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      if (!filterText) return true;
-      const value = item[filterBy as keyof Vehicle]?.toString().toLowerCase() || "";
-      return value.includes(filterText.toLowerCase());
+      // Text Search
+      if (filterText) {
+        const value = item[filterBy as keyof Vehicle]?.toString().toLowerCase() || "";
+        if (!value.includes(filterText.toLowerCase())) return false;
+      }
+
+      // Active Status
+      if (filterActive !== "all") {
+        const isActive = filterActive === "true";
+        if (item.isActive !== isActive) return false;
+      }
+
+      // Inspected Status
+      if (filterInspected !== "all") {
+        const isInspected = filterInspected === "true";
+        if (item.isInspected !== isInspected) return false;
+      }
+
+      // Class Filter
+      if (filterClass !== "all" && item.class !== filterClass) return false;
+
+      // Category Filter
+      if (filterCategory !== "all" && item.category !== filterCategory) return false;
+
+      return true;
     });
-  }, [data, filterText, filterBy]);
+  }, [data, filterText, filterBy, filterActive, filterInspected, filterClass, filterCategory]);
 
   const handleReset = () => {
     setFilterText("");
     setFilterBy("vehicleName");
+    setFilterActive("all");
+    setFilterInspected("all");
+    setFilterClass("all");
+    setFilterCategory("all");
   };
+
+  // Unique values for dropdowns
+  const uniqueClasses = useMemo(() => [...new Set(data.map(v => v.class))], [data]);
+  const uniqueCategories = useMemo(() => [...new Set(data.map(v => v.category))], [data]);
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 min-h-screen">
@@ -192,7 +226,7 @@ export default function ManageVehicles() {
       </div>
 
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
           <div className="space-y-2">
             <Label htmlFor="filter">Search</Label>
             <Input
@@ -214,13 +248,72 @@ export default function ManageVehicles() {
                 <SelectItem value="vehiclePlate">Plate Number</SelectItem>
                 <SelectItem value="owner">Owner</SelectItem>
                 <SelectItem value="manufacturer">Manufacturer</SelectItem>
+                <SelectItem value="model">Model</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2 flex items-end gap-2">
-            <Button onClick={handleReset} variant="outline" className="w-full">
-              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+          <div className="space-y-2">
+            <Label htmlFor="filterClass">Class</Label>
+            <Select value={filterClass} onValueChange={setFilterClass}>
+              <SelectTrigger id="filterClass">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {uniqueClasses.map(cls => (
+                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterCategory">Category</Label>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger id="filterCategory">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterActive">Status</Label>
+            <Select value={filterActive} onValueChange={setFilterActive}>
+              <SelectTrigger id="filterActive">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="true">Active Only</SelectItem>
+                <SelectItem value="false">Inactive Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterInspected">Inspected</Label>
+            <Select value={filterInspected} onValueChange={setFilterInspected}>
+              <SelectTrigger id="filterInspected">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="true">Inspected</SelectItem>
+                <SelectItem value="false">Not Inspected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 flex items-end gap-2 xl:col-span-6 justify-end">
+            <Button onClick={handleReset} variant="outline" className="w-full md:w-auto">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Filters
             </Button>
           </div>
         </div>

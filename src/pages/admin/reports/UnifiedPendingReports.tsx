@@ -403,10 +403,10 @@ const tableColumns: ColumnDef<UnifiedBooking>[] = [
           <Badge
             variant="outline"
             className={`gap-1 ${isTuk
-                ? "border-yellow-500 text-yellow-700 bg-yellow-50"
-                : platform === "iOS"
-                  ? "border-gray-500 text-gray-700 bg-gray-50"
-                  : "border-green-600 text-green-700 bg-green-50"
+              ? "border-yellow-500 text-yellow-700 bg-yellow-50"
+              : platform === "iOS"
+                ? "border-gray-500 text-gray-700 bg-gray-50"
+                : "border-green-600 text-green-700 bg-green-50"
               }`}
           >
             {isTuk ? (
@@ -422,8 +422,8 @@ const tableColumns: ColumnDef<UnifiedBooking>[] = [
         <Badge
           variant="outline"
           className={`gap-1 ${isTuk
-              ? "border-yellow-500 text-yellow-700 bg-yellow-50"
-              : "border-blue-500 text-blue-700 bg-blue-50"
+            ? "border-yellow-500 text-yellow-700 bg-yellow-50"
+            : "border-blue-500 text-blue-700 bg-blue-50"
             }`}
         >
           {isTuk ? <Car className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
@@ -660,15 +660,23 @@ export default function PendingBookingsReport() {
             defaultValue: "all",
           },
           {
-            key: "vehicle",
-            label: "Vehicle Class",
+            key: "isAdvance",
+            label: "Is Advance",
             options: [
-              { label: "All Vehicles", value: "all" },
-              { label: "Bus", value: "Bus" },
-              { label: "Luxury", value: "Luxury" },
-              { label: "Economy", value: "ECONOMY" },
-              { label: "Standard", value: "STANDARD" },
-              { label: "Tuk", value: "Tuk" },
+              { label: "All", value: "all" },
+              { label: "Advance Only", value: "Yes" },
+              { label: "Immediate Only", value: "No" },
+            ],
+            defaultValue: "all",
+          },
+          {
+            key: "hireType",
+            label: "Hire Type",
+            options: [
+              { label: "All Types", value: "all" },
+              { label: "One Way", value: "One Way" },
+              { label: "Round Trip", value: "Round Trip" },
+              { label: "Hourly", value: "Hourly" },
             ],
             defaultValue: "all",
           },

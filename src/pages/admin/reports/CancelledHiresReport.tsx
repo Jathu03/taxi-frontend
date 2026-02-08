@@ -79,6 +79,29 @@ export default function CancelledHiresReport() {
           ],
           defaultValue: "all",
         },
+        {
+          key: "cancelledType",
+          label: "Cancellation Type",
+          options: [
+            { label: "All Types", value: "all" },
+            { label: "Customer", value: "Customer" },
+            { label: "Driver", value: "Driver" },
+            { label: "System", value: "System" },
+            { label: "No Show", value: "No Show" },
+          ],
+          defaultValue: "all",
+        },
+        {
+          key: "hireType",
+          label: "Hire Type",
+          options: [
+            { label: "All Types", value: "all" },
+            { label: "Corporate", value: "Corporate" },
+            { label: "Budget", value: "Budget" },
+            { label: "Tuk-Hire", value: "Tuk-Hire" },
+          ],
+          defaultValue: "all",
+        },
       ]}
     />
   );

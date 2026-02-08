@@ -81,7 +81,14 @@ export function ReportPageTemplate<T extends Record<string, any>>({
     filters.forEach(filter => {
       const filterValue = filterValues[filter.key as string];
       if (filterValue !== "all") {
-        result = result.filter(item => item[filter.key] === filterValue);
+        result = result.filter(item => {
+          const itemValue = item[filter.key];
+          // Special handling for boolean values (Select options are always strings "true"/"false")
+          if (typeof itemValue === "boolean") {
+            return String(itemValue) === filterValue;
+          }
+          return itemValue === filterValue;
+        });
       }
     });
 

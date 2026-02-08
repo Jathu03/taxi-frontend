@@ -105,6 +105,8 @@ export default function ManageDrivers() {
   const navigate = useNavigate();
   const [filterText, setFilterText] = useState("");
   const [filterBy, setFilterBy] = useState("firstName");
+  const [filterBlocked, setFilterBlocked] = useState("all");
+  const [filterManualDispatch, setFilterManualDispatch] = useState("all");
 
   const {
     data,
@@ -122,15 +124,33 @@ export default function ManageDrivers() {
 
   const filteredData = useMemo(() => {
     return data.filter((driver) => {
-      if (!filterText) return true;
-      const value = driver[filterBy as keyof Driver]?.toString().toLowerCase() || "";
-      return value.includes(filterText.toLowerCase());
+      // Text Search
+      if (filterText) {
+        const value = driver[filterBy as keyof Driver]?.toString().toLowerCase() || "";
+        if (!value.includes(filterText.toLowerCase())) return false;
+      }
+
+      // Blocked Filter
+      if (filterBlocked !== "all") {
+        const isBlocked = filterBlocked === "true";
+        if (driver.blocked !== isBlocked) return false;
+      }
+
+      // Manual Dispatch Filter
+      if (filterManualDispatch !== "all") {
+        const isManual = filterManualDispatch === "true";
+        if (driver.manualDispatch !== isManual) return false;
+      }
+
+      return true;
     });
-  }, [data, filterText, filterBy]);
+  }, [data, filterText, filterBy, filterBlocked, filterManualDispatch]);
 
   const handleReset = () => {
     setFilterText("");
     setFilterBy("firstName");
+    setFilterBlocked("all");
+    setFilterManualDispatch("all");
   };
 
   return (
@@ -150,7 +170,7 @@ export default function ManageDrivers() {
       </div>
 
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           <div className="space-y-2">
             <Label htmlFor="filter">Search</Label>
             <Input
@@ -173,6 +193,34 @@ export default function ManageDrivers() {
                 <SelectItem value="code">Driver Code</SelectItem>
                 <SelectItem value="contactNumber">Contact Number</SelectItem>
                 <SelectItem value="nic">NIC</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterBlocked">Blocked Status</Label>
+            <Select value={filterBlocked} onValueChange={setFilterBlocked}>
+              <SelectTrigger id="filterBlocked">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="true">Blocked Only</SelectItem>
+                <SelectItem value="false">Active Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filterManual">Manual Dispatch</Label>
+            <Select value={filterManualDispatch} onValueChange={setFilterManualDispatch}>
+              <SelectTrigger id="filterManual">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="true">Enabled</SelectItem>
+                <SelectItem value="false">Disabled</SelectItem>
               </SelectContent>
             </Select>
           </div>
