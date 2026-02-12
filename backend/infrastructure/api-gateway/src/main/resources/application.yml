@@ -1,0 +1,78 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      routes:
+        - id: user-service-users
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+
+        - id: user-service-roles
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/roles/**
+
+        - id: corporate-service
+          uri: lb://CORPORATE-SERVICE
+          predicates:
+            - Path=/api/corporates/**
+
+        - id: vehicle-company-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/companies/**
+
+        - id: vehicle-owner-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-owners/**
+
+        - id: vehicle-make-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-makes/**
+
+        - id: vehicle-model-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-models/**
+
+        - id: vehicle-class-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-classes/**
+
+        - id: fare-schemes-service
+          uri: lb://FARE-PROMO-SERVICE
+          predicates:
+            - Path=/api/fare-schemes/**
+
+        - id: promo-codes-service
+          uri: lb://FARE-PROMO-SERVICE
+          predicates:
+            - Path=/api/promo-codes/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.loadbalancer: TRACE
+    reactor.netty: TRACE

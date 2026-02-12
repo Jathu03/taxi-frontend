@@ -1,0 +1,26 @@
+server:
+  port: 8086
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/taxi_system
+    username: root
+    password: "#Mrc25031967"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always # Shows DB status, disk space, etc.
+
+service:
+  urls:
+    vehicle-service: http://localhost:8082
+    corporate-service: http://localhost:80864

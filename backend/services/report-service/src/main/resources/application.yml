@@ -1,0 +1,27 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: report-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/taxi_system?createDatabaseIfNotExist=true
+    username: root
+    password: "#Mrc25031967"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+# Other service URLs for Feign Clients
+service:
+  urls:
+    booking-service: http://localhost:8087
+    vehicle-service: http://localhost:8082
+    driver-service: http://localhost:8083

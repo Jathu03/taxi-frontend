@@ -1,0 +1,13 @@
+{
+  "bookingId": "1",
+  "recipientEmail": "s.jathurshan03@gmail.com",
+  "recipientName": "Jathurshan",
+  "templateCode": "BOOKING_CREATED",
+  "templateVariables": {
+    "customerName": "Jathurshan",
+    "bookingId": "BK-TEST-001",
+    "pickupAddress": "123 Main Street, Colombo",
+    "pickupTime": "2026-02-03 14:30:00",
+    "vehicleClass": "Car"
+  }
+}
