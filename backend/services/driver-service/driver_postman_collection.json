@@ -1,0 +1,38 @@
+{
+    "info": {
+        "_postman_id": "driver-service-test",
+        "name": "Driver Service Test",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create Driver (With Vehicle and User Resolution)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"code\": \"DRV001\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"nic\": \"123456789V\",\n    \"birthDate\": \"1990-01-01\",\n    \"contactNumber\": \"0771234567\",\n    \"emergencyNumber\": \"0777654321\",\n    \"address\": \"123 Main St, Colombo\",\n    \"profileImageUrl\": \"http://example.com/profile.jpg\",\n    \"manualDispatchOnly\": false,\n    \"licenseNumber\": \"B1234567\",\n    \"licenseExpiryDate\": \"2025-12-31\",\n    \"licenseImageUrl\": \"http://example.com/license.jpg\",\n    \"vehicleNumber\": \"CAB-1234\",\n    \"user\": \"john.doe\",\n    \"companyId\": 1\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/drivers",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "api",
+                        "drivers"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ]
+}

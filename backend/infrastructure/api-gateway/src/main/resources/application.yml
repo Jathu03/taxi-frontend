@@ -1,0 +1,128 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      routes:
+        - id: user-service-users
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+
+        - id: user-service-roles
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/roles/**
+
+        - id: corporate-service
+          uri: lb://CORPORATE-SERVICE
+          predicates:
+            - Path=/api/corporates/**
+
+        - id: vehicle-company-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/companies/**
+
+        - id: vehicle-owner-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-owners/**
+
+        - id: vehicle-make-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-makes/**
+
+        - id: vehicle-model-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-models/**
+
+        - id: vehicle-class-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicle-classes/**
+
+        - id: vehicle-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/vehicles/**
+
+        - id: insurer-service
+          uri: lb://VEHICLE-SERVICE
+          predicates:
+            - Path=/api/insurers/**
+
+        - id: fare-schemes-service
+          uri: lb://FARE-PROMO-SERVICE
+          predicates:
+            - Path=/api/fare-schemes/**
+
+        - id: promo-codes-service
+          uri: lb://FARE-PROMO-SERVICE
+          predicates:
+            - Path=/api/promo-codes/**
+
+        - id: device-service
+          uri: lb://DEVICE-SERVICE
+          predicates:
+            - Path=/api/devices/**
+
+        - id: device-logs-service
+          uri: lb://DEVICE-SERVICE
+          predicates:
+            - Path=/api/device-logs/**
+
+        - id: driver-service
+          uri: lb://DRIVER-SERVICE
+          predicates:
+            - Path=/api/drivers/**
+
+        - id: driver-activity-logs-service
+          uri: lb://DRIVER-SERVICE
+          predicates:
+            - Path=/api/driver-activity-logs/**
+
+        - id: mail-service
+          uri: lb://MAIL-SERVICE
+          predicates:
+            - Path=/api/emails/**
+
+        - id: mail-template-service
+          uri: lb://MAIL-SERVICE
+          predicates:
+            - Path=/api/email-templates/**
+
+        - id: booking-service
+          uri: lb://BOOKING-SERVICE
+          predicates:
+            - Path=/api/bookings/**
+
+        - id: sms-service
+          uri: lb://MAIL-SERVICE
+          predicates:
+            - Path=/api/sms/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.loadbalancer: TRACE
+    reactor.netty: TRACE

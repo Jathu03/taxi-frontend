@@ -1,0 +1,41 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: device-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/taxi_system
+    username: root
+    password: "#Mrc25031967"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  data:
+    web:
+      pageable:
+        # Set a new default size (e.g., 50 instead of 20)
+        default-page-size: 50
+        # IMPORTANT: Allow clients to request a large number of items
+        max-page-size: 2000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always # Shows DB status, disk space, etc.
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
