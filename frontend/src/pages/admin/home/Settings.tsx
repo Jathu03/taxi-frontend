@@ -41,6 +41,14 @@ export default function Settings() {
                     item.children?.forEach(child => {
                         defaults[role][`${item.title}:${child.title}`] = true;
                     });
+                } else if (role === 'driver' && item.title === 'Home') {
+                    defaults[role][item.title] = true;
+                    defaults[role][`${item.title}:Driver Dashboard`] = true;
+                } else if (role === 'corporate' && ["Home", "Corporate Portal", "Reports"].includes(item.title)) {
+                    defaults[role][item.title] = true;
+                    item.children?.forEach(child => {
+                        defaults[role][`${item.title}:${child.title}`] = true;
+                    });
                 }
             });
         });

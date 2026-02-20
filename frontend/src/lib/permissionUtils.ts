@@ -14,6 +14,14 @@ export const getRolePermissions = (role: string): Record<string, boolean> | null
 };
 
 export const isMenuItemAllowed = (role: string, itemTitle: string, parentTitle?: string): boolean | undefined => {
+    // Fail-safes to ensure essential menus are always visible
+    if (role === 'admin' && (itemTitle === 'Home' || itemTitle === 'Dashboard' || itemTitle === 'Settings')) {
+        return true;
+    }
+    if (role === 'driver' && (itemTitle === 'Driver Dashboard' || itemTitle === 'Home')) {
+        return true;
+    }
+
     const rolePermissions = getRolePermissions(role);
     if (rolePermissions) {
         const key = parentTitle ? `${parentTitle}:${itemTitle}` : itemTitle;
@@ -30,6 +38,13 @@ export const isPathAllowed = (path: string, role: string): boolean => {
     // This prevents them from being locked out of the app entirely
     if (role === "admin") {
         if (path === "/admin" || path === "/admin/" || path === "/admin/settings") {
+            return true;
+        }
+    }
+
+    // Fail-safe: Always allow Drivers to access their dashboard
+    if (role === "driver") {
+        if (path === "/admin/driver-dashboard" || path === "/admin/driver-dashboard/") {
             return true;
         }
     }
